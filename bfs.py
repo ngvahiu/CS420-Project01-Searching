@@ -8,16 +8,19 @@ class BFS:
         self.grid_cells = grid_cells
         self.solution = []
         self.queue = queue.Queue()
+        self.is_completed = False
 
     def run(self):
+        if(self.is_completed):
+            return True
         self.current_cell.visited = True
         neighbors = self.current_cell.check_neighbors(self.grid_cells)
 
         for neighbor in neighbors:
             neighbor.parent = self.current_cell
             if(neighbor.type == Cell_Type.GOAL):
-                while not  self.queue.empty():
-                    self.solution.insert(0, self.queue.get())
+                self.set_solution(neighbor)
+                self.is_completed = True
                 return True
             self.queue.put(neighbor)
 
@@ -25,6 +28,7 @@ class BFS:
             self.current_cell = self.queue.get()
         return False
 
-    def solution(self):
-        if(len(self.solution)>0):
-            return self.solution
+    def set_solution(self, last_cell):
+        while last_cell is not None:
+            self.solution.insert(0, self.last_cell)
+            last_cell = last_cell.parent
