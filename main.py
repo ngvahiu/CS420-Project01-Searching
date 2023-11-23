@@ -83,8 +83,11 @@ while running:
     # YOUR WORK
     show_instructions()
     matrix.draw()
-    if not search.run():
+    search.run()
+    if not search.is_completed:
         end = time.time()
+    else:
+        matrix.draw_solution(search.solution)
 
     show_time(end)
 

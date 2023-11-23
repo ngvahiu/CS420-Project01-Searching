@@ -48,6 +48,19 @@ class Matrix:
     def draw(self):
         [cell.draw() for cell in self.grid_cells]
 
+    def get_center_cell(self, x, y):
+        return (float(x * TILE + TILE / 2), float(y * TILE + TILE / 2))
+
+    def draw_solution(self, solution: list):
+        (x1, y1) = self.get_center_cell(solution[0].x, solution[0].y)
+        for index in range(1, len(solution)):
+            (x2, y2) = self.get_center_cell(solution[index].x, solution[index].y)
+
+            # draw path between 2 centers
+            pygame.draw.line(self.sc, pygame.Color("blue"), (x1, y1), (x2, y2), 2)
+
+            (x1, y1) = (x2, y2)
+
 
 class Cell_Type(Enum):
     OBSTACLE = "OBSTACLE"
@@ -70,13 +83,13 @@ class Cell:
 
         if self.visited:
             pygame.draw.rect(self.sc, pygame.Color("yellow"), (x, y, TILE, TILE))
-        else:
-            if self.type == Cell_Type.OBSTACLE:
-                pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
-            elif self.type == Cell_Type.START:
-                pygame.draw.rect(self.sc, pygame.Color("red"), (x, y, TILE, TILE))
-            elif self.type == Cell_Type.GOAL:
-                pygame.draw.rect(self.sc, pygame.Color("green"), (x, y, TILE, TILE))
+
+        if self.type == Cell_Type.OBSTACLE:
+            pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
+        elif self.type == Cell_Type.START:
+            pygame.draw.rect(self.sc, pygame.Color("red"), (x, y, TILE, TILE))
+        elif self.type == Cell_Type.GOAL:
+            pygame.draw.rect(self.sc, pygame.Color("green"), (x, y, TILE, TILE))
 
         pygame.draw.line(self.sc, pygame.Color("gray"), (x, y), (x + TILE, y), 2)
         pygame.draw.line(
@@ -104,7 +117,7 @@ class Cell:
         top_right = self.check_cell(self.x + 1, self.y - 1, grid_cells)
         bottom_right = self.check_cell(self.x + 1, self.y + 1, grid_cells)
         top_left = self.check_cell(self.x - 1, self.y - 1, grid_cells)
-        bottom_left = self.check_cell(self.x - 1 , self.y + 1, grid_cells)
+        bottom_left = self.check_cell(self.x - 1, self.y + 1, grid_cells)
 
         if top and not top.type == Cell_Type.OBSTACLE and not top.visited:
             neighbors.append(top)
@@ -115,14 +128,38 @@ class Cell:
         if right and not right.type == Cell_Type.OBSTACLE and not right.visited:
             neighbors.append(right)
 
-        # Diagonal    
-        if top_right and not top_right.type == Cell_Type.OBSTACLE and not top_right.visited and not top.type == Cell_Type.OBSTACLE and not right.type ==Cell_Type.OBSTACLE:
+        # Diagonal
+        if (
+            top_right
+            and not top_right.type == Cell_Type.OBSTACLE
+            and not top_right.visited
+            and not top.type == Cell_Type.OBSTACLE
+            and not right.type == Cell_Type.OBSTACLE
+        ):
             neighbors.append(top_right)
-        if top_left and not top_left.type == Cell_Type.OBSTACLE and not top_left.visited and not top.type == Cell_Type.OBSTACLE and not left.type ==Cell_Type.OBSTACLE:
+        if (
+            top_left
+            and not top_left.type == Cell_Type.OBSTACLE
+            and not top_left.visited
+            and not top.type == Cell_Type.OBSTACLE
+            and not left.type == Cell_Type.OBSTACLE
+        ):
             neighbors.append(top_left)
-        if bottom_right and not bottom_right.type == Cell_Type.OBSTACLE and not bottom_right.visited and not bottom.type == Cell_Type.OBSTACLE and not right.type ==Cell_Type.OBSTACLE:
+        if (
+            bottom_right
+            and not bottom_right.type == Cell_Type.OBSTACLE
+            and not bottom_right.visited
+            and not bottom.type == Cell_Type.OBSTACLE
+            and not right.type == Cell_Type.OBSTACLE
+        ):
             neighbors.append(bottom_right)
-        if bottom_left and not bottom_left.type == Cell_Type.OBSTACLE and not bottom_left.visited and not bottom.type == Cell_Type.OBSTACLE and not left.type ==Cell_Type.OBSTACLE:
+        if (
+            bottom_left
+            and not bottom_left.type == Cell_Type.OBSTACLE
+            and not bottom_left.visited
+            and not bottom.type == Cell_Type.OBSTACLE
+            and not left.type == Cell_Type.OBSTACLE
+        ):
             neighbors.append(bottom_left)
 
         return neighbors
