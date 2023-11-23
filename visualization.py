@@ -100,10 +100,11 @@ class Cell:
         bottom = self.check_cell(self.x, self.y + 1, grid_cells)
         left = self.check_cell(self.x - 1, self.y, grid_cells)
         right = self.check_cell(self.x + 1, self.y, grid_cells)
-        top_right = self.check_cell(self.x + 1, self.y + 1, grid_cells)
-        bottom_right = self.check_cell(self.x + 1, self.y - 1, grid_cells)
-        top_left = self.check_cell(self.x - 1, self.y + 1, grid_cells)
-        bottom_left = self.check_cell(self.x - 1 , self.y - 1, grid_cells)
+
+        top_right = self.check_cell(self.x + 1, self.y - 1, grid_cells)
+        bottom_right = self.check_cell(self.x + 1, self.y + 1, grid_cells)
+        top_left = self.check_cell(self.x - 1, self.y - 1, grid_cells)
+        bottom_left = self.check_cell(self.x - 1 , self.y + 1, grid_cells)
 
         if top and not top.type == Cell_Type.OBSTACLE and not top.visited:
             neighbors.append(top)
