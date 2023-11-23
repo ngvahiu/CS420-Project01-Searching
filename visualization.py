@@ -100,6 +100,10 @@ class Cell:
         bottom = self.check_cell(self.x, self.y + 1, grid_cells)
         left = self.check_cell(self.x - 1, self.y, grid_cells)
         right = self.check_cell(self.x + 1, self.y, grid_cells)
+        top_right = self.check_cell(self.x + 1, self.y + 1, grid_cells)
+        bottom_right = self.check_cell(self.x + 1, self.y - 1, grid_cells)
+        top_left = self.check_cell(self.x - 1, self.y + 1, grid_cells)
+        bottom_left = self.check_cell(self.x - 1 , self.y - 1, grid_cells)
 
         if top and not top.type == Cell_Type.OBSTACLE and not top.visited:
             neighbors.append(top)
@@ -109,5 +113,15 @@ class Cell:
             neighbors.append(left)
         if right and not right.type == Cell_Type.OBSTACLE and not right.visited:
             neighbors.append(right)
+
+        # Diagonal    
+        if top_right and not top_right.type == Cell_Type.OBSTACLE and not top_right.visited and not top.type == Cell_Type.OBSTACLE and not right.type ==Cell_Type.OBSTACLE:
+            neighbors.append(top_right)
+        if top_left and not top_left.type == Cell_Type.OBSTACLE and not top_left.visited and not top.type == Cell_Type.OBSTACLE and not left.type ==Cell_Type.OBSTACLE:
+            neighbors.append(top_left)
+        if bottom_right and not bottom_right.type == Cell_Type.OBSTACLE and not bottom_right.visited and not bottom.type == Cell_Type.OBSTACLE and not right.type ==Cell_Type.OBSTACLE:
+            neighbors.append(bottom_right)
+        if bottom_left and not bottom_left.type == Cell_Type.OBSTACLE and not bottom_left.visited and not bottom.type == Cell_Type.OBSTACLE and not left.type ==Cell_Type.OBSTACLE:
+            neighbors.append(bottom_left)
 
         return neighbors
