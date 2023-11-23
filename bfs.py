@@ -1,4 +1,5 @@
 import queue
+
 from visualization import Cell, Cell_Type
 
 
@@ -11,24 +12,25 @@ class BFS:
         self.is_completed = False
 
     def run(self):
-        if(self.is_completed):
-            return True
+        if self.is_completed:
+            return
+
         self.current_cell.visited = True
         neighbors = self.current_cell.check_neighbors(self.grid_cells)
 
         for neighbor in neighbors:
             neighbor.parent = self.current_cell
-            if(neighbor.type == Cell_Type.GOAL):
+            if neighbor.type == Cell_Type.GOAL:
                 self.set_solution(neighbor)
                 self.is_completed = True
-                return True
+                return
+
             self.queue.put(neighbor)
 
         while self.current_cell.visited:
             self.current_cell = self.queue.get()
-        return False
 
-    def set_solution(self, last_cell):
-        while last_cell is not None:
-            self.solution.insert(0, self.last_cell)
-            last_cell = last_cell.parent
+    def set_solution(self, cell: Cell):
+        while cell is not None:
+            self.solution.insert(0, cell)
+            cell = cell.parent

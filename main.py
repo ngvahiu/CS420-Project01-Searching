@@ -3,6 +3,7 @@ import time
 
 import pygame
 
+from bfs import BFS
 from constants import TILE, WINDOW_HEIGHT, WINDOW_WIDTH
 from dfs import DFS
 from visualization import Matrix
@@ -29,8 +30,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.algo == "DFS":
         search = DFS(matrix.start_cell, matrix.grid_cells)
+    elif args.algo == "BFS":
+        search = BFS(matrix.start_cell, matrix.grid_cells)
 
 # python main.py --algo DFS
+# python main.py --algo BFS
 
 # instructions
 instructions = [
