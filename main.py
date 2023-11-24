@@ -6,6 +6,7 @@ import pygame
 from bfs import BFS
 from constants import TILE, WINDOW_HEIGHT, WINDOW_WIDTH
 from dfs import DFS
+from a_star import A_star
 from visualization import Matrix
 
 # pygame setup
@@ -24,7 +25,7 @@ search = None
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Search algorithm")
     parser.add_argument(
-        "--algo", type=str, help="Enter search algorithm", default="DFS"
+        "--algo", type=str, help="Enter search algorithm", default="A_star"
     )
 
     args = parser.parse_args()
@@ -32,6 +33,8 @@ if __name__ == "__main__":
         search = DFS(matrix.start_cell, matrix.grid_cells)
     elif args.algo == "BFS":
         search = BFS(matrix.start_cell, matrix.grid_cells)
+    elif args.algo == "A_star":
+        search = A_star(matrix.start_cell, matrix.goal_cell, matrix.grid_cells)
 
 # python main.py --algo DFS
 # python main.py --algo BFS
@@ -76,7 +79,7 @@ def show_time(end):
     sc.blit(text, textRect)
 
 
-# game loop
+# game loop     
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -87,8 +90,9 @@ while running:
     # YOUR WORK
     show_instructions()
     matrix.draw()
-    search.run()
+
     if not search.is_completed:
+        search.run()
         end = time.time()
     else:
         matrix.draw_solution(search.solution)

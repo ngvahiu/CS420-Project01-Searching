@@ -70,14 +70,22 @@ class Cell_Type(Enum):
 
 
 class Cell:
-    def __init__(self, x, y, sc=None, rows=0, cols=0, type=Cell_Type.BLANK, parent = None) -> None:
+    def __init__(self, x, y, sc=None, rows=0, cols=0, type=Cell_Type.BLANK, parent=None, heuristic=0, cost=0) -> None:
         self.x, self.y = x, y
         self.sc = sc
         self.rows = rows
         self.cols = cols
         self.type = type
         self.visited = False
+        self.heuristic = heuristic
+        self.cost = cost
         self.parent = parent
+    
+    def __lt__(self, other):
+        return (self.cost + self.heuristic) < (other.cost + other.heuristic)
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
 
     def draw(self):
         x, y = self.x * TILE, self.y * TILE
