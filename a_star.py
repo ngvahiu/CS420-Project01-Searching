@@ -1,0 +1,36 @@
+import heapq
+
+from visualization import Cell, Cell_Type
+
+class A_star:
+    def __init__(self, start_cell: Cell = None, goal_cell: Cell = None, grid_cells=None) -> None:
+        self.grid_cells = grid_cells
+        self.goal_cell = goal_cell
+        self.frontier = [start_cell]
+        self.current_cell = start_cell
+        heapq.heapify(self.frontier)
+
+    def mahattan_distance(self, current_cell) :
+        return abs(current_cell.x - self.goal_cell.x) + abs(current_cell.y - self.goal_cell.y)
+    
+
+    def run(self):
+      if self.current_cell.type == Cell_Type.GOAL:
+        return True
+      self.current_cell = heapq.heappop(self.frontier)
+
+      self.current_cell.visited = True
+
+      for neighbor_cell in self.current_cell.check_neighbors(self.grid_cells):
+        neighbor_cell.heuristic = self.mahattan_distance(neighbor_cell)
+        neighbor_cell.cost = self.current_cell.cost + 1
+
+        if neighbor_cell not in self.frontier:
+          heapq.heappush(self.frontier, neighbor_cell)
+        else:
+            existing_cell = next(cell for cell in self.frontier if cell.x == neighbor_cell.x and cell.y == neighbor_cell.y)
+            if neighbor_cell.cost < existing_cell.cost:
+                existing_cell.cost = neighbor_cell.cost
+                existing_cell.parent = neighbor_cell.parent
+
+      return False

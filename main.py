@@ -5,6 +5,7 @@ import pygame
 
 from constants import TILE, WINDOW_HEIGHT, WINDOW_WIDTH
 from dfs import DFS
+from a_star import A_star
 from visualization import Matrix
 
 # pygame setup
@@ -19,6 +20,7 @@ running = True
 # instances
 matrix = Matrix("inputs/test.txt", sc)
 search = None
+a_star_search = None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Search algorithm")
@@ -29,6 +31,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.algo == "DFS":
         search = DFS(matrix.start_cell, matrix.grid_cells)
+        a_star_search = A_star(matrix.start_cell, matrix.goal_cell, matrix.grid_cells)
 
 # python main.py --algo DFS
 
@@ -72,7 +75,7 @@ def show_time(end):
     sc.blit(text, textRect)
 
 
-# game loop
+# game loop     
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -83,7 +86,10 @@ while running:
     # YOUR WORK
     show_instructions()
     matrix.draw()
-    if not search.run():
+    # if not search.run():
+    #     end = time.time()
+
+    if not a_star_search.run():
         end = time.time()
 
     show_time(end)
