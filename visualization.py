@@ -11,42 +11,74 @@ class Matrix:
         self.sc = sc
         self.start_cell = None
         self.goal_cell = None
-        self.grid_cells = []
-
+        self.current_floor = 1
+        self.grid_cells = {1: [], 2: []}
+        self.key_cells = {1: [], 2: []}
+        self.door_cells = {1: [], 2: []}
         # initialize the matrix
         self.init_matrix()
 
     def init_matrix(self):
-        file = open(self.file_name, "r")
+        # file = open(self.file_name, "r")
+        with open(self.file_name, 'r') as file:
+            # Read the dimensions from the first line
+            dimensions = file.readline().strip().split()
+            rows, cols = int(dimensions[0]), int(dimensions[1])
 
-        if file.readable():
-            size_inputs = file.readline().split()
-            rows = int(size_inputs[0])
-            cols = int(size_inputs[1])
+            # Initialize the grid
+            grid = [[None for _ in range(cols)] for _ in range(rows)]
+            current_floor = None
+            i = 0
+            for line in file:
+                line = line.strip()
+                if line.startswith("[floor"):
+                    current_floor = line.strip("[]")[-1]
+                    i=0
+                elif line:
+                    floor_cells = line.split(',')
+                    for j, cell_value in enumerate(floor_cells):
+                        cell_value = cell_value.strip()
+                        if cell_value == "UP" or cell_value == "DO":
+                            cell_type = Cell_Type.UP if cell_value == "UP" else Cell_Type.DOWN
+                            cell = Cell(j, i, self.sc, rows, cols, cell_type, cell_value=cell_value)
+                            self.grid_cells[int(current_floor)].append(cell)
+                        elif cell_value[0] == 'K':
+                            cell_type = Cell_Type.KEY
+                            cell = Cell(j, i, self.sc, rows, cols, cell_type, cell_value=cell_value)
+                            self.grid_cells[int(current_floor)].append(cell)
+                            self.key_cells[int(current_floor)].append(cell)
+                        elif cell_value[0] == "D":
+                            cell_type = Cell_Type.DOOR
+                            cell = Cell(j, i, self.sc, rows, cols, cell_type, cell_value=cell_value)
+                            self.grid_cells[int(current_floor)].append(cell)
+                            self.door_cells[int(current_floor)].append(cell)
+                        elif cell_value.isdigit():
+                            value = int(cell_value)
+                            if value == 1:
+                                cell_type = Cell_Type.START
+                                cell = Cell(j, i, self.sc, rows, cols, cell_type)
+                                self.start_cell = cell
+                            elif value == 2:
+                                cell_type = Cell_Type.GOAL
+                                cell = Cell(j, i, self.sc, rows, cols, cell_type)
+                                self.goal_cell = cell
+                            else:
+                                cell_type = Cell_Type.BLANK
+                                cell = Cell(j, i, self.sc, rows, cols, cell_type)
+                            
+                            self.grid_cells[int(current_floor)].append(cell)
+                        else:
+                            cell_type = Cell_Type.OBSTACLE
+                            cell = Cell(j, i, self.sc, rows, cols, cell_type)
+                            self.grid_cells[int(current_floor)].append(cell)
+                    i+=1
 
-            for i in range(rows):
-                row = file.readline().split()
+        # return grid
 
-                for j in range(cols):
-                    if int(row[j]) == -1:  # obstacle
-                        cell = Cell(j, i, self.sc, rows, cols, Cell_Type.OBSTACLE)
-                        self.grid_cells.append(cell)
-                    elif int(row[j]) == 1:  # start cell
-                        cell = Cell(j, i, self.sc, rows, cols, Cell_Type.START)
-                        self.start_cell = cell
-                        self.grid_cells.append(cell)
-                    elif int(row[j]) == 2:  # goal cell
-                        cell = Cell(j, i, self.sc, rows, cols, Cell_Type.GOAL)
-                        self.goal_cell = cell
-                        self.grid_cells.append(cell)
-                    else:
-                        cell = Cell(j, i, self.sc, rows, cols)
-                        self.grid_cells.append(cell)
+        # file.close()
 
-        file.close()
-
-    def draw(self):
-        [cell.draw() for cell in self.grid_cells]
+    def draw(self, current_floor):
+        [cell.draw() for cell in self.grid_cells[current_floor]]
 
     def get_center_cell(self, x, y):
         return (float(x * TILE + TILE / 2), float(y * TILE + TILE / 2))
@@ -57,7 +89,7 @@ class Matrix:
             (x2, y2) = self.get_center_cell(solution[index].x, solution[index].y)
 
             # draw path between 2 centers
-            pygame.draw.line(self.sc, pygame.Color("blue"), (x1, y1), (x2, y2), 2)
+            pygame.draw.line(self.sc, pygame.Color("#26577C"), (x1, y1), (x2, y2), 2)
 
             (x1, y1) = (x2, y2)
 
@@ -67,10 +99,14 @@ class Cell_Type(Enum):
     START = "START"
     GOAL = "GOAL"
     BLANK = "BLANK"
+    UP = "UP"
+    DOWN = "DOWN"
+    KEY = "KEY"
+    DOOR = "DOOR"
 
 
 class Cell:
-    def __init__(self, x, y, sc=None, rows=0, cols=0, type=Cell_Type.BLANK, parent=None, heuristic=0, cost=0) -> None:
+    def __init__(self, x, y, sc=None, rows=0, cols=0, type=Cell_Type.BLANK, parent=None, heuristic=0, cost=0, cell_value=None) -> None:
         self.x, self.y = x, y
         self.sc = sc
         self.rows = rows
@@ -80,6 +116,8 @@ class Cell:
         self.heuristic = heuristic
         self.cost = cost
         self.parent = parent
+        self.cell_value = cell_value
+        self.font = pygame.font.Font(None, 36)
     
     def __lt__(self, other):
         return (self.cost + self.heuristic) < (other.cost + other.heuristic)
@@ -91,14 +129,22 @@ class Cell:
         x, y = self.x * TILE, self.y * TILE
 
         if self.visited:
-            pygame.draw.rect(self.sc, pygame.Color("yellow"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#EBE3D5"), (x, y, TILE, TILE))
+        else:
+            pygame.draw.rect(self.sc, pygame.Color("#F3EEEA"), (x, y, TILE, TILE))
 
         if self.type == Cell_Type.OBSTACLE:
             pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
         elif self.type == Cell_Type.START:
-            pygame.draw.rect(self.sc, pygame.Color("red"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#BE3144"), (x, y, TILE, TILE))
         elif self.type == Cell_Type.GOAL:
-            pygame.draw.rect(self.sc, pygame.Color("green"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#192655"), (x, y, TILE, TILE))
+        elif self.type == Cell_Type.KEY:
+            self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (244, 206, 20))
+        elif self.type == Cell_Type.DOOR or self.type==Cell_Type.UP or self.type==Cell_Type.DOWN:
+            pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
+            self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (255, 255, 255))
+       
 
         pygame.draw.line(self.sc, pygame.Color("gray"), (x, y), (x + TILE, y), 2)
         pygame.draw.line(
@@ -108,6 +154,11 @@ class Cell:
             self.sc, pygame.Color("gray"), (x + TILE, y + TILE), (x, y + TILE), 2
         )
         pygame.draw.line(self.sc, pygame.Color("gray"), (x, y + TILE), (x, y), 2)
+
+    def draw_text_in_center(self, text, x, y, width, height, color):
+        text_surface = self.font.render(text, True, color)
+        text_rect = text_surface.get_rect(center=(x + width // 2 + 2, y + height // 2 + 2))
+        self.sc.blit(text_surface, text_rect)
 
     def check_cell(self, x, y, grid_cells: list):
         find_index = lambda x, y: x + y * self.cols
