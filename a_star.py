@@ -24,6 +24,7 @@ class A_star:
       self.current_cell = heapq.heappop(self.frontier)
 
       self.current_cell.visited = True
+      self.current_cell.visited_count +=1
 
       for neighbor_cell in self.current_cell.check_neighbors(self.grid_cells):
         neighbor_cell.heuristic = self.mahattan_distance(neighbor_cell)

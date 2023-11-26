@@ -11,7 +11,6 @@ class Matrix:
         self.sc = sc
         self.start_cell = None
         self.goal_cell = None
-        self.current_floor = 1
         self.grid_cells = {1: [], 2: []}
         self.key_cells = {1: [], 2: []}
         self.door_cells = {1: [], 2: []}
@@ -25,8 +24,6 @@ class Matrix:
             dimensions = file.readline().strip().split()
             rows, cols = int(dimensions[0]), int(dimensions[1])
 
-            # Initialize the grid
-            grid = [[None for _ in range(cols)] for _ in range(rows)]
             current_floor = None
             i = 0
             for line in file:
@@ -83,13 +80,14 @@ class Matrix:
     def get_center_cell(self, x, y):
         return (float(x * TILE + TILE / 2), float(y * TILE + TILE / 2))
 
-    def draw_solution(self, solution: list):
+    def draw_solution(self, solution: list, current_floor):
+        [cell.draw_heat() for cell in self.grid_cells[current_floor]]
         (x1, y1) = self.get_center_cell(solution[0].x, solution[0].y)
         for index in range(1, len(solution)):
             (x2, y2) = self.get_center_cell(solution[index].x, solution[index].y)
 
             # draw path between 2 centers
-            pygame.draw.line(self.sc, pygame.Color("#26577C"), (x1, y1), (x2, y2), 2)
+            pygame.draw.line(self.sc, pygame.Color("#66ccff"), (x1, y1), (x2, y2), 2)
 
             (x1, y1) = (x2, y2)
 
@@ -114,6 +112,17 @@ class Cell:
         self.type = type
         self.visited = False
         self.heuristic = heuristic
+        self.visited_count = 0
+        self.heat_colors = {
+            0: '#F3EEEA',
+            1: "#EBE3D5",
+            2: "#d6c5a9",
+            3: "#c5ae87",
+            4: "#ac8b53",
+            5: "#78623a",
+            6: "#453821",
+            7: "#332a1a"
+        }
         self.cost = cost
         self.parent = parent
         self.cell_value = cell_value
@@ -155,9 +164,38 @@ class Cell:
         )
         pygame.draw.line(self.sc, pygame.Color("gray"), (x, y + TILE), (x, y), 2)
 
+    def draw_heat(self):
+        x, y = self.x * TILE, self.y * TILE
+        pygame.draw.rect(self.sc, pygame.Color(self.heat_colors[self.visited_count if self.visited_count <= 7 else 7]), (x, y, TILE, TILE))
+
+        if self.type == Cell_Type.OBSTACLE:
+            pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
+        elif self.type == Cell_Type.START:
+            pygame.draw.rect(self.sc, pygame.Color("#BE3144"), (x, y, TILE, TILE))
+        elif self.type == Cell_Type.GOAL:
+            pygame.draw.rect(self.sc, pygame.Color("#192655"), (x, y, TILE, TILE))
+        elif self.type == Cell_Type.KEY:
+            self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (244, 206, 20))
+        elif self.type == Cell_Type.DOOR or self.type==Cell_Type.UP or self.type==Cell_Type.DOWN:
+            pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
+            self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (255, 255, 255))
+       
+
+        pygame.draw.line(self.sc, pygame.Color("gray"), (x, y), (x + TILE, y), 2)
+        pygame.draw.line(
+            self.sc, pygame.Color("gray"), (x + TILE, y), (x + TILE, y + TILE), 2
+        )
+        pygame.draw.line(
+            self.sc, pygame.Color("gray"), (x + TILE, y + TILE), (x, y + TILE), 2
+        )
+        pygame.draw.line(self.sc, pygame.Color("gray"), (x, y + TILE), (x, y), 2)
+
     def draw_text_in_center(self, text, x, y, width, height, color):
         text_surface = self.font.render(text, True, color)
-        text_rect = text_surface.get_rect(center=(x + width // 2 + 2, y + height // 2 + 2))
+        if text == "UP" or text == "DO":
+            text_rect = text_surface.get_rect(center=(x + width // 2, y + height // 2 + 2))
+        else:
+            text_rect = text_surface.get_rect(center=(x + width // 2 + 2, y + height // 2 + 2))
         self.sc.blit(text_surface, text_rect)
 
     def check_cell(self, x, y, grid_cells: list):

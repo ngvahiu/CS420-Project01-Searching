@@ -41,15 +41,14 @@ class Game:
 
     def display_game(self, event_list):
         self.draw_background()
-        self.matrix.draw(self.current_floor)
         self.show_instructions(event_list)
         self.show_time()
-        
         if not self.search.is_completed:
+            self.matrix.draw(self.current_floor)
             self.search.run()
             self.end = time.time()
         else:
-            self.matrix.draw_solution(self.search.solution)
+            self.matrix.draw_solution(self.search.solution, self.current_floor)
         return
 
     def display_menu(self, event_list):

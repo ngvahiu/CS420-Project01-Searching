@@ -16,6 +16,7 @@ class DFS:
             return
 
         self.current_cell.visited = True
+        self.current_cell.visited_count +=1
         neighbors = self.current_cell.check_neighbors(self.grid_cells)
 
         for cell in neighbors:
