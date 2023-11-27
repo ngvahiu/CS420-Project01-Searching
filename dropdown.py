@@ -15,7 +15,7 @@ class DropDown():
 
     def draw(self, surf):
         pg.draw.rect(surf, self.color_menu[self.menu_active], self.rect, 0)
-        msg = self.font.render(self.main, 1, (0, 0, 0))
+        msg = self.font.render(self.main, 1, (255, 255, 255))
         surf.blit(msg, msg.get_rect(center = self.rect.center))
 
         if self.draw_menu:
@@ -23,7 +23,7 @@ class DropDown():
                 rect = self.rect.copy()
                 rect.y += (i+1) * self.rect.height
                 pg.draw.rect(surf, self.color_option[1 if i == self.active_option else 0], rect, 0)
-                msg = self.font.render(text, 1, (0, 0, 0))
+                msg = self.font.render(text, 1, (255, 255, 255))
                 surf.blit(msg, msg.get_rect(center = rect.center))
 
     def update(self, event_list):

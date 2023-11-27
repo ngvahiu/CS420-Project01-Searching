@@ -4,7 +4,6 @@ import pygame
 
 from constants import TILE
 
-
 class Matrix:
     def __init__(self, file_name, sc: pygame.surface) -> None:
         self.file_name = file_name
@@ -14,6 +13,7 @@ class Matrix:
         self.grid_cells = {1: [], 2: []}
         self.key_cells = {1: [], 2: []}
         self.door_cells = {1: [], 2: []}
+        self.current_solution_step = 0
         # initialize the matrix
         self.init_matrix()
 
@@ -80,16 +80,20 @@ class Matrix:
     def get_center_cell(self, x, y):
         return (float(x * TILE + TILE / 2), float(y * TILE + TILE / 2))
 
-    def draw_solution(self, solution: list, current_floor):
+    def draw_solution(self, solution: list, current_floor, naruto):
         [cell.draw_heat() for cell in self.grid_cells[current_floor]]
         (x1, y1) = self.get_center_cell(solution[0].x, solution[0].y)
-        for index in range(1, len(solution)):
+        for index in range(1, self.current_solution_step if self.current_solution_step < len(solution) else len(solution)):
             (x2, y2) = self.get_center_cell(solution[index].x, solution[index].y)
 
             # draw path between 2 centers
             pygame.draw.line(self.sc, pygame.Color("#66ccff"), (x1, y1), (x2, y2), 2)
 
             (x1, y1) = (x2, y2)
+        
+        self.sc.blit(naruto, (x1-TILE/2, y1-TILE/2))
+        if(self.current_solution_step < len(solution)):
+            self.current_solution_step+=1
 
 
 class Cell_Type(Enum):
@@ -114,14 +118,14 @@ class Cell:
         self.heuristic = heuristic
         self.visited_count = 0
         self.heat_colors = {
-            0: '#FFFFFF',
-            1: "#EBE3D5",
-            2: "#d6c5a9",
-            3: "#c5ae87",
-            4: "#ac8b53",
-            5: "#78623a",
-            6: "#453821",
-            7: "#332a1a"
+            0: '#333333',
+            1: "#f7f0a1",
+            2: "#f5ec8a",
+            3: "#f1e45b",
+            4: "#eddd2c",
+            5: "#ebd914",
+            6: "#d3c312",
+            7: "#bcad10"
         }
         self.cost = cost
         self.parent = parent
@@ -140,14 +144,14 @@ class Cell:
         if self.visited:
             pygame.draw.rect(self.sc, pygame.Color("#EBE3D5"), (x, y, TILE, TILE))
         else:
-            pygame.draw.rect(self.sc, pygame.Color("#FFFFFF"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color(self.heat_colors[0]), (x, y, TILE, TILE))
 
         if self.type == Cell_Type.OBSTACLE:
-            pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#810000"), (x, y, TILE, TILE))
         elif self.type == Cell_Type.START:
-            pygame.draw.rect(self.sc, pygame.Color("#BE3144"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#e4611b"), (x, y, TILE, TILE))
         elif self.type == Cell_Type.GOAL:
-            pygame.draw.rect(self.sc, pygame.Color("#192655"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#2db300"), (x, y, TILE, TILE))
         elif self.type == Cell_Type.KEY:
             self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (244, 206, 20))
         elif self.type == Cell_Type.DOOR or self.type==Cell_Type.UP or self.type==Cell_Type.DOWN:
@@ -169,11 +173,11 @@ class Cell:
         pygame.draw.rect(self.sc, pygame.Color(self.heat_colors[self.visited_count if self.visited_count <= 7 else 7]), (x, y, TILE, TILE))
 
         if self.type == Cell_Type.OBSTACLE:
-            pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#810000"), (x, y, TILE, TILE))
         elif self.type == Cell_Type.START:
-            pygame.draw.rect(self.sc, pygame.Color("#BE3144"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#e4611b"), (x, y, TILE, TILE))
         elif self.type == Cell_Type.GOAL:
-            pygame.draw.rect(self.sc, pygame.Color("#192655"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#2db300"), (x, y, TILE, TILE))
         elif self.type == Cell_Type.KEY:
             self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (244, 206, 20))
         elif self.type == Cell_Type.DOOR or self.type==Cell_Type.UP or self.type==Cell_Type.DOWN:

@@ -7,7 +7,11 @@ from game import Game
 # pygame setup
 pygame.init()
 pygame.display.set_caption("CS420-Project01-Searching")
+
 sc = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+naruto = pygame.image.load("image/character.png")
+naruto = naruto.convert_alpha()
+naruto = pygame.transform.scale(naruto, (40, 40))
 clock = pygame.time.Clock()
 running = True
 
@@ -15,7 +19,7 @@ start = time.time()
 end = start
 
 
-game = Game(sc)
+game = Game(sc, naruto)
 
 # game loop     
 while running:

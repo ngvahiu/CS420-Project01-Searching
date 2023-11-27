@@ -12,7 +12,7 @@ class Game_State(Enum):
     IN_GAME = "IN_GAME"
 
 class Game:
-    def __init__(self, screen):
+    def __init__(self, screen, naruto):
         self.current_level = None
         self.levels = {
             1: ["DFS", "BFS", "A_Star"],
@@ -31,6 +31,7 @@ class Game:
         self.matrix = None
         self.search=None
         self.start = None
+        self.naruto = naruto
         self.end = None
 
     def display(self, event_list):
@@ -48,7 +49,8 @@ class Game:
             self.search.run()
             self.end = time.time()
         else:
-            self.matrix.draw_solution(self.search.solution, self.current_floor)
+            pygame.time.wait(100)
+            self.matrix.draw_solution(self.search.solution, self.current_floor, self.naruto)
         return
 
     def display_menu(self, event_list):
@@ -59,7 +61,7 @@ class Game:
     def draw_title(self):
         pygame.display.set_caption("MOVE YOUR STEP")
         font = pygame.font.Font(None, 100)
-        text = font.render("MOVE YOUR STEP", True, (31, 23, 23))
+        text = font.render("MOVE YOUR STEP", True, (228, 97, 27))
         text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 -100))
         self.screen.blit(text, text_rect)
 
@@ -74,7 +76,7 @@ class Game:
 
     def draw_button(self, color, rect):
         text= "Run algorithm"
-        text_color ="black"
+        text_color ="white"
         pygame.draw.rect(self.screen, color, rect)    
         font = pygame.font.Font(None, 36)
         text_surface = font.render(text, True, text_color)
@@ -127,7 +129,7 @@ class Game:
             ("black", "Obstacle"),
         ]   
         for index, (color, note) in enumerate(instructions):
-            text = self.font.render(note, True, (0, 0, 0))
+            text = self.font.render(note, True, (255, 255, 255))
             textRect = text.get_rect()
             textRect.center = (WINDOW_WIDTH - 2 * TILE, TILE * (index + 1) + TILE / 2 + 80)
             self.screen.blit(text, textRect)
@@ -141,7 +143,7 @@ class Game:
         text = font.render(
             "21CTT2",
             True,
-            (0, 0, 0),
+            (228, 97, 27),
         )
         textRect = text.get_rect()
         textRect.center = (WINDOW_WIDTH - 3 * TILE + 3, TILE + 10)
@@ -149,7 +151,7 @@ class Game:
         text = self.font.render(
             "Current floor: " + str(self.current_floor),
             True,
-            (0, 0, 0),
+            (255, 255, 255),
         )
         textRect = text.get_rect()
         textRect.center = (WINDOW_WIDTH - 3 * TILE - 13, TILE * 5 + 80)
@@ -160,7 +162,7 @@ class Game:
         text = self.font.render(
             "Running time: " + str(round(self.end - self.start, 1)) + "s",
             True,
-            (0, 0, 0),
+            (255, 255, 255),
         )
         textRect = text.get_rect()
         textRect.center = (WINDOW_WIDTH - 3 * TILE, TILE * 5 + 60)
