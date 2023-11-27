@@ -14,9 +14,9 @@ class DFS:
     def run(self):
         if self.is_completed:
             return
-
-        self.current_cell.visited = True
-        self.current_cell.visited_count +=1
+        if self.current_cell.visited is False:
+            self.current_cell.visited = True
+            self.current_cell.visited_count += random.randint(1,7)
         neighbors = self.current_cell.check_neighbors(self.grid_cells)
 
         for cell in neighbors:

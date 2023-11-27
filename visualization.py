@@ -114,7 +114,7 @@ class Cell:
         self.heuristic = heuristic
         self.visited_count = 0
         self.heat_colors = {
-            0: '#F3EEEA',
+            0: '#FFFFFF',
             1: "#EBE3D5",
             2: "#d6c5a9",
             3: "#c5ae87",
@@ -140,7 +140,7 @@ class Cell:
         if self.visited:
             pygame.draw.rect(self.sc, pygame.Color("#EBE3D5"), (x, y, TILE, TILE))
         else:
-            pygame.draw.rect(self.sc, pygame.Color("#F3EEEA"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#FFFFFF"), (x, y, TILE, TILE))
 
         if self.type == Cell_Type.OBSTACLE:
             pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
