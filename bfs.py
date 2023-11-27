@@ -10,6 +10,7 @@ class BFS:
         self.solution = []
         self.queue = queue.Queue()
         self.is_completed = False
+        self.cell_traverse_count = 0
 
     def run(self):
         if self.is_completed:
@@ -18,7 +19,7 @@ class BFS:
         self.current_cell.visited = True
         self.current_cell.visited_count +=1
         neighbors = self.current_cell.check_neighbors(self.grid_cells)
-
+        self.cell_traverse_count+=1
         for neighbor in neighbors:
             neighbor.parent = self.current_cell
             if neighbor.type == Cell_Type.GOAL:

@@ -10,11 +10,13 @@ class DFS:
         self.stack = []
         self.solution = []
         self.is_completed = False
+        self.cell_traverse_count = 0
 
     def run(self):
         if self.is_completed:
             return
         if self.current_cell.visited is False:
+            self.cell_traverse_count +=1
             self.current_cell.visited = True
             self.current_cell.visited_count += 1
         neighbors = self.current_cell.check_neighbors(self.grid_cells)

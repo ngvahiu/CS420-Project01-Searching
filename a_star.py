@@ -9,6 +9,7 @@ class A_star:
         self.frontier = [start_cell]
         self.current_cell = start_cell
         self.is_completed = False
+        self.cell_traverse_count = 0
         self.solution = []
         heapq.heapify(self.frontier)
 
@@ -22,7 +23,7 @@ class A_star:
         self.set_solution()
         return
       self.current_cell = heapq.heappop(self.frontier)
-
+      self.cell_traverse_count +=1
       self.current_cell.visited = True
       self.current_cell.visited_count +=1
 

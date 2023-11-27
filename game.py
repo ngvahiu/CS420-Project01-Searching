@@ -1,5 +1,6 @@
 from enum import Enum
 import pygame
+from pygame import mixer
 from visualization import Matrix
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT, GRADIENT_END_COLOR, GRADIENT_START_COLOR, COLOR_ACTIVE, COLOR_INACTIVE, COLOR_LIST_ACTIVE, COLOR_LIST_INACTIVE, TILE
 from dropdown import DropDown
@@ -33,6 +34,9 @@ class Game:
         self.start = None
         self.naruto = naruto
         self.end = None
+        #Load audio file
+        mixer.music.load('audio/theme_song.mp3')
+        mixer.music.set_volume(0.2)
 
     def display(self, event_list):
         if self.state == Game_State.MENU:
@@ -45,12 +49,17 @@ class Game:
         self.show_instructions(event_list)
         self.show_time()
         if not self.search.is_completed:
+            if pygame.mixer.music.get_busy():
+                pygame.mixer.music.pause()
             self.matrix.draw(self.current_floor)
             self.search.run()
             self.end = time.time()
         else:
+            if not pygame.mixer.music.get_busy():
+                pygame.mixer.music.play()
             pygame.time.wait(100)
             self.matrix.draw_solution(self.search.solution, self.current_floor, self.naruto)
+            self.show_score()
         return
 
     def display_menu(self, event_list):
@@ -124,9 +133,9 @@ class Game:
     
     def show_instructions(self, event_list):
         instructions = [
-            ("#BE3144", "Start position"),
-            ("#192655", "Goal position"),
-            ("black", "Obstacle"),
+            ("#e4611b", "Start position"),
+            ("#2db300", "Goal position"),
+            ("#810000", "Obstacle"),
         ]   
         for index, (color, note) in enumerate(instructions):
             text = self.font.render(note, True, (255, 255, 255))
@@ -146,7 +155,7 @@ class Game:
             (228, 97, 27),
         )
         textRect = text.get_rect()
-        textRect.center = (WINDOW_WIDTH - 3 * TILE + 3, TILE + 10)
+        textRect.center = (WINDOW_WIDTH - 3 * TILE, TILE + 10)
         self.screen.blit(text, textRect)
         text = self.font.render(
             "Current floor: " + str(self.current_floor),
@@ -154,7 +163,7 @@ class Game:
             (255, 255, 255),
         )
         textRect = text.get_rect()
-        textRect.center = (WINDOW_WIDTH - 3 * TILE - 13, TILE * 5 + 80)
+        textRect.center = (WINDOW_WIDTH - 3 * TILE + 2, TILE * 5 + 80)
         self.screen.blit(text, textRect)
         self.handle_select_level_and_algorithm(event_list, WINDOW_WIDTH//2 - 114)
     
@@ -165,7 +174,17 @@ class Game:
             (255, 255, 255),
         )
         textRect = text.get_rect()
-        textRect.center = (WINDOW_WIDTH - 3 * TILE, TILE * 5 + 60)
+        textRect.center = (WINDOW_WIDTH - 3 * TILE + 2, TILE * 5 + 60)
+        self.screen.blit(text, textRect)
+
+    def show_score(self):
+        text = self.font.render(
+            "Naruto's score: " + str(100 - self.search.cell_traverse_count) + " pts",
+            True,
+            (255, 255, 255),
+        )
+        textRect = text.get_rect()
+        textRect.center = (WINDOW_WIDTH - 3 * TILE + 2, TILE * 5 + 100)
         self.screen.blit(text, textRect)
     
     def set_up(self):

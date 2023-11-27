@@ -155,7 +155,7 @@ class Cell:
         elif self.type == Cell_Type.KEY:
             self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (244, 206, 20))
         elif self.type == Cell_Type.DOOR or self.type==Cell_Type.UP or self.type==Cell_Type.DOWN:
-            pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#810000"), (x, y, TILE, TILE))
             self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (255, 255, 255))
        
 
@@ -181,7 +181,7 @@ class Cell:
         elif self.type == Cell_Type.KEY:
             self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (244, 206, 20))
         elif self.type == Cell_Type.DOOR or self.type==Cell_Type.UP or self.type==Cell_Type.DOWN:
-            pygame.draw.rect(self.sc, pygame.Color("black"), (x, y, TILE, TILE))
+            pygame.draw.rect(self.sc, pygame.Color("#810000"), (x, y, TILE, TILE))
             self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (255, 255, 255))
        
 

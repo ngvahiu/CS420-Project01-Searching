@@ -1,12 +1,13 @@
 import time
 
 import pygame
-from constants import TILE, WINDOW_HEIGHT, WINDOW_WIDTH
+from constants import WINDOW_HEIGHT, WINDOW_WIDTH
 from game import Game
 
 # pygame setup
 pygame.init()
 pygame.display.set_caption("CS420-Project01-Searching")
+
 
 sc = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 naruto = pygame.image.load("image/character.png")
