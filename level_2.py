@@ -1,7 +1,8 @@
 import queue
 import random
 import sys
-
+from a_star import A_star
+from dfs import DFS
 from visualization import Cell, Cell_Type
 
 
@@ -16,10 +17,12 @@ class Level2:
         self.goal_cell = goal_cell
         self.grid_cells = grid_cells
         self.solution = []
-
+        self.solution_order = []
+        self.search = None
+        self.cell_traverse_count = 0
         self.flood_cells = []
         self.flood_cells.append(start_cell)
-
+        self.current_index = 0
         self.key_set = set()
         self.is_completed = False
 
@@ -54,6 +57,7 @@ class Level2:
             else:
                 current_cell = None
 
+
     def get_doors_keys(self):
         while self.flood_cells:
             flood_cell = self.flood_cells.pop(0)
@@ -81,6 +85,15 @@ class Level2:
             for cell in flood_cell.flood_to:
                 print("Flood to: ", cell.cell_value)
             print()
+        
+        self.clear_visited_cells()
+
+    def clear_visited_cells(self):
+        for cell in self.grid_cells:
+            cell.visited = False
+            cell.heuristic = 0
+            cell.cost = 0
+            cell.parent = None
 
     def manhattan_distance(self, current_cell: Cell, goal_cell: Cell):
         return abs(current_cell.x - goal_cell.x) + abs(current_cell.y - goal_cell.y)
@@ -90,21 +103,91 @@ class Level2:
             if cell.type == Cell_Type.KEY and cell.cell_value == key:
                 return cell
 
-    def find_path(self, start_cell: Cell, goal_cell: Cell):
-        if(start_cell == goal_cell):
-            return [start_cell]
-        path = [start_cell]
+    def find_path(self):
+        key_set = set()
+        if(self.start_cell == self.goal_cell):
+            return [self.start_cell]
+        path = [self.start_cell]
+        for cell in self.start_cell.flood_to:
+            if cell.type == Cell_Type.KEY:
+                key_set.add(cell.cell_value)
+                index = path.index(self.start_cell)
+                path.insert(index+1, cell)
+        while(self.goal_cell not in path):
+            for cell in self.start_cell.flood_to:
+                if cell.type == Cell_Type.DOOR and cell.cell_value == 'D4':
+                    print(cell.type)
+                if cell.type == Cell_Type.DOOR:
+                    key = 'K' + cell.cell_value[1]
+                    if key in key_set:
+                        self.helper(cell, self.goal_cell, key_set, path)
+                        if self.goal_cell in path:
+                            break
+                elif cell.type == Cell_Type.GOAL:
+                    path.append(cell)
+                    break
+
+        self.solution_order = path
+    
+    def helper(self, start_cell, goal_cell, key_set, path):
+        if start_cell.type == Cell_Type.DOOR and start_cell.cell_value == 'D4':
+            print(start_cell.cell_value)
+        if(start_cell not in path):
+            path.append(start_cell)
         for cell in start_cell.flood_to:
-            new_path = self.find_path(cell, goal_cell)
-            if(len(new_path)>0):
-                path.extend(new_path)
-                break
-        if(len(path) > 1):
-            return path
-        return[]
+            if cell.type == Cell_Type.KEY and cell not in path:
+                key_set.add(cell.cell_value)
+                path.append(cell)
+        for cell in start_cell.flood_to:
+            if cell.type == Cell_Type.DOOR:
+                key = 'K' + cell.cell_value[1]
+                if key in key_set:
+                    self.helper(cell, goal_cell, key_set, path)
+                    if goal_cell in path:
+                        return
+            elif cell.type == Cell_Type.GOAL:
+                    path.append(cell)
+                    return
 
-
+    
 
     def run(self):
-        for cell in self.find_path(self.start_cell, self.goal_cell):
-            print(cell.cell_value)
+        if self.is_completed == True:
+            return
+        if len(self.solution_order) == 0:
+            self.get_doors_keys()
+            self.find_path()
+            for cell in self.solution_order:
+                if cell.type == Cell_Type.KEY:
+                    door_available = False
+                    door = 'D' +  cell.cell_value[1]
+                    for subcell in self.solution_order:
+                        if subcell.type == Cell_Type.DOOR and subcell.cell_value == door:
+                            door_available = True
+                    if door_available==False:
+                        self.solution_order.remove(cell)
+        
+        if self.current_index < len(self.solution_order) - 1:
+            if(self.search == None or self.search.is_completed):
+                self.clear_visited_cells()
+                self.search = A_star(self.solution_order[self.current_index], self.solution_order[self.current_index+1], self.grid_cells, self.key_set)
+            else:
+                self.search.run()
+                if(self.search.is_completed):
+                    if(self.solution_order[self.current_index+1].type == Cell_Type.KEY):
+                        self.key_set.add('K' + self.solution_order[self.current_index+1].cell_value[1])
+                    self.solution.extend(self.search.solution)
+                    self.current_index += 1
+        else:
+            self.is_completed = True
+  
+        
+
+
+
+
+        
+
+                
+        
+        
