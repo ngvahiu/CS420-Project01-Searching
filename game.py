@@ -251,6 +251,9 @@ class Game:
         self.screen.blit(text, textRect)
 
     def set_up(self):
+        self.current_map = '1'
+        self.current_level = '2'
+        self.current_algorithm = "A_Star"
         if self.current_map is None or self.current_level is None:
             print(self.current_map, self.current_level)
             return

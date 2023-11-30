@@ -18,7 +18,7 @@ class Level2:
         self.solution = []
 
         self.flood_cells = []
-        self.flood_cells.append(goal_cell)
+        self.flood_cells.append(start_cell)
 
         self.key_set = set()
         self.is_completed = False
@@ -32,7 +32,7 @@ class Level2:
             neighbors = current_cell.check_neighbors(self.grid_cells)
 
             for cell in neighbors:
-                if cell.type == Cell_Type.KEY or cell.type == Cell_Type.START:
+                if cell.type == Cell_Type.KEY or cell.type == Cell_Type.GOAL:
                     if cell not in flood_cell.flood_to:
                         cell.visited = True
                         cell.flooded_from.append(flood_cell)
@@ -90,5 +90,21 @@ class Level2:
             if cell.type == Cell_Type.KEY and cell.cell_value == key:
                 return cell
 
+    def find_path(self, start_cell: Cell, goal_cell: Cell):
+        if(start_cell == goal_cell):
+            return [start_cell]
+        path = [start_cell]
+        for cell in start_cell.flood_to:
+            new_path = self.find_path(cell, goal_cell)
+            if(len(new_path)>0):
+                path.extend(new_path)
+                break
+        if(len(path) > 1):
+            return path
+        return[]
+
+
+
     def run(self):
-        self.get_doors_keys()
+        for cell in self.find_path(self.start_cell, self.goal_cell):
+            print(cell.cell_value)
