@@ -5,7 +5,11 @@ from visualization import Cell, Cell_Type
 
 class A_star:
     def __init__(
-        self, start_cell: Cell = None, goal_cell: Cell = None, grid_cells=None
+        self,
+        start_cell: Cell = None,
+        goal_cell: Cell = None,
+        grid_cells=None,
+        key_set=None,
     ) -> None:
         self.grid_cells = grid_cells
         self.goal_cell = goal_cell
@@ -14,6 +18,7 @@ class A_star:
         self.is_completed = False
         self.cell_traverse_count = 0
         self.solution = []
+        self.key_set = key_set
         heapq.heapify(self.frontier)
 
     def manhattan_distance(self, current_cell):
@@ -22,7 +27,7 @@ class A_star:
         )
 
     def run(self):
-        if self.current_cell.type == Cell_Type.GOAL:
+        if self.current_cell == self.goal_cell:
             self.is_completed = True
             self.set_solution()
             return
@@ -32,6 +37,13 @@ class A_star:
         self.current_cell.visited_count += 1
 
         for neighbor_cell in self.current_cell.check_neighbors(self.grid_cells):
+            if (
+                self.key_set != None
+                and neighbor_cell.type == Cell_Type.DOOR
+                and neighbor_cell.key not in self.key_set
+            ):
+                # print(neighbor_cell.cell_value)
+                continue
             neighbor_cell.heuristic = self.manhattan_distance(neighbor_cell)
             neighbor_cell.cost = self.current_cell.cost + 1
             neighbor_cell.parent = self.current_cell

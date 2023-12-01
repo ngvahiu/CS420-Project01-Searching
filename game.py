@@ -6,6 +6,7 @@ from pygame import mixer
 
 from a_star import A_star
 from bfs import BFS
+from blind_search_level_2 import BlindSearchLevel2
 from constants import (
     COLOR_ACTIVE,
     COLOR_INACTIVE,
@@ -19,7 +20,8 @@ from constants import (
 )
 from dfs import DFS
 from dropdown import DropDown
-from level_2 import Level2
+from level_3 import Level3
+from tree_based_level_2 import TreeBasedLevel2
 from visualization import Matrix
 
 
@@ -31,7 +33,11 @@ class Game_State(Enum):
 class Game:
     def __init__(self, screen, naruto):
         self.current_level = None
-        self.levels = {1: ["DFS", "BFS", "A_Star"], 2: ["BFS", "A_Star"], 3: ["BFS"]}
+        self.levels = {
+            1: ["DFS", "BFS", "A_Star"],
+            2: ["Blind Search", "Tree based"],
+            3: ["Tree based"],
+        }
         self.current_algorithm = None
         self.current_map = None
         self.state = Game_State.MENU
@@ -79,6 +85,12 @@ class Game:
         # Load audio file
         mixer.music.load("audio/theme_song.mp3")
         mixer.music.set_volume(0.2)
+
+    def go_up(self):
+        self.current_floor += 1
+
+    def go_down(self):
+        self.current_floor -= 1
 
     def display(self, event_list):
         if self.state == Game_State.MENU:
@@ -251,6 +263,9 @@ class Game:
         self.screen.blit(text, textRect)
 
     def set_up(self):
+        self.current_map = "1"
+        self.current_level = "3"
+        self.current_algorithm = "Tree based"
         if self.current_map is None or self.current_level is None:
             print(self.current_map, self.current_level)
             return
@@ -272,12 +287,32 @@ class Game:
                 self.matrix.start_cell, self.matrix.grid_cells[self.current_floor]
             )
         elif self.current_algorithm == "A_Star":
-            # self.search = A_star(self.matrix.start_cell, self.matrix.goal_cell, self.matrix.grid_cells[self.current_floor])
-            self.search = Level2(
+            self.search = A_star(
                 self.matrix.start_cell,
                 self.matrix.goal_cell,
                 self.matrix.grid_cells[self.current_floor],
             )
+        elif self.current_algorithm == "Blind Search":
+            self.search = BlindSearchLevel2(
+                self.matrix.start_cell,
+                self.matrix.goal_cell,
+                self.matrix.grid_cells[self.current_floor],
+            )
+        elif self.current_algorithm == "Tree based":
+            if self.current_level == "2":
+                self.search = TreeBasedLevel2(
+                    self.matrix.start_cell,
+                    self.matrix.goal_cell,
+                    self.matrix.grid_cells[self.current_floor],
+                )
+            elif self.current_level == "3":
+                self.search = Level3(
+                    self.matrix.start_cell,
+                    self.matrix.goal_cell,
+                    self.matrix.grid_cells,
+                    self.go_up,
+                    self.go_down,
+                )
         else:
             return
         self.level_list.rect.x = WINDOW_WIDTH - 214

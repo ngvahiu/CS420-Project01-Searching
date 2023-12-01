@@ -44,6 +44,7 @@ class Matrix:
                                 j,
                                 i,
                                 self.sc,
+                                int(current_floor),
                                 rows,
                                 cols,
                                 cell_type,
@@ -56,6 +57,7 @@ class Matrix:
                                 j,
                                 i,
                                 self.sc,
+                                int(current_floor),
                                 rows,
                                 cols,
                                 cell_type,
@@ -69,6 +71,7 @@ class Matrix:
                                 j,
                                 i,
                                 self.sc,
+                                int(current_floor),
                                 rows,
                                 cols,
                                 cell_type,
@@ -78,22 +81,51 @@ class Matrix:
                             self.door_cells[int(current_floor)].append(cell)
                         elif cell_value.isdigit():
                             value = int(cell_value)
+                            cell = None
                             if value == 1:
                                 cell_type = Cell_Type.START
-                                cell = Cell(j, i, self.sc, rows, cols, cell_type)
+                                cell = Cell(
+                                    j,
+                                    i,
+                                    self.sc,
+                                    int(current_floor),
+                                    rows,
+                                    cols,
+                                    cell_type,
+                                )
                                 self.start_cell = cell
+                                self.grid_cells[int(current_floor)].append(cell)
                             elif value == 2:
                                 cell_type = Cell_Type.GOAL
-                                cell = Cell(j, i, self.sc, rows, cols, cell_type)
+                                cell = Cell(
+                                    j,
+                                    i,
+                                    self.sc,
+                                    int(current_floor),
+                                    rows,
+                                    cols,
+                                    cell_type,
+                                )
                                 self.goal_cell = cell
+                                self.grid_cells[int(current_floor)].append(cell)
                             else:
                                 cell_type = Cell_Type.BLANK
-                                cell = Cell(j, i, self.sc, rows, cols, cell_type)
+                                cell = Cell(
+                                    j,
+                                    i,
+                                    self.sc,
+                                    int(current_floor),
+                                    rows,
+                                    cols,
+                                    cell_type,
+                                )
+                                self.grid_cells[int(current_floor)].append(cell)
 
-                            self.grid_cells[int(current_floor)].append(cell)
                         else:
                             cell_type = Cell_Type.OBSTACLE
-                            cell = Cell(j, i, self.sc, rows, cols, cell_type)
+                            cell = Cell(
+                                j, i, self.sc, int(current_floor), rows, cols, cell_type
+                            )
                             self.grid_cells[int(current_floor)].append(cell)
                     i += 1
 
@@ -145,6 +177,7 @@ class Cell:
         x,
         y,
         sc=None,
+        floor=1,
         rows=0,
         cols=0,
         type=Cell_Type.BLANK,
@@ -155,6 +188,7 @@ class Cell:
     ) -> None:
         self.x, self.y = x, y
         self.sc = sc
+        self.floor = floor
         self.rows = rows
         self.cols = cols
         self.type = type

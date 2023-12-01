@@ -9,6 +9,7 @@ class BFS:
         self.grid_cells = grid_cells
         self.solution = []
         self.queue = queue.Queue()
+        self.added_cells = set()
         self.is_completed = False
         self.cell_traverse_count = 0
 
@@ -17,10 +18,13 @@ class BFS:
             return
 
         self.current_cell.visited = True
-        self.current_cell.visited_count +=1
+        self.current_cell.visited_count += 1
         neighbors = self.current_cell.check_neighbors(self.grid_cells)
-        self.cell_traverse_count+=1
+        self.cell_traverse_count += 1
         for neighbor in neighbors:
+            if (str(neighbor.x) + " " + str(neighbor.y)) in self.added_cells:
+                continue
+            self.added_cells.add(str(neighbor.x) + " " + str(neighbor.y))
             neighbor.parent = self.current_cell
             if neighbor.type == Cell_Type.GOAL:
                 self.set_solution(neighbor)
@@ -29,8 +33,7 @@ class BFS:
 
             self.queue.put(neighbor)
 
-        while self.current_cell.visited:
-            self.current_cell = self.queue.get()
+        self.current_cell = self.queue.get()
 
     def set_solution(self, cell: Cell):
         while cell is not None:
