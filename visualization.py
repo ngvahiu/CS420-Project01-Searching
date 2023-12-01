@@ -11,9 +11,9 @@ class Matrix:
         self.sc = sc
         self.start_cell = None
         self.goal_cell = None
-        self.grid_cells = {1: [], 2: []}
-        self.key_cells = {1: [], 2: []}
-        self.door_cells = {1: [], 2: []}
+        self.grid_cells = {}
+        self.key_cells = {}
+        self.door_cells = {}
         self.current_solution_step = 0
         # initialize the matrix
         self.init_matrix()
@@ -31,6 +31,9 @@ class Matrix:
                 line = line.strip()
                 if line.startswith("[floor"):
                     current_floor = line.strip("[]")[-1]
+                    self.grid_cells[int(current_floor)] = []
+                    self.key_cells[int(current_floor)] = []
+                    self.door_cells[int(current_floor)] = []
                     i = 0
                 elif line:
                     floor_cells = line.split(",")
@@ -128,8 +131,6 @@ class Matrix:
                             )
                             self.grid_cells[int(current_floor)].append(cell)
                     i += 1
-
-        # return grid
 
         # file.close()
 
