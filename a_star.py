@@ -53,8 +53,6 @@ class A_star:
         return False
 
     def set_solution(self):
-        if self.goal_cell.type == Cell_Type.DOOR:
-            print(self.goal_cell.type)
         while self.current_cell:
             self.solution.insert(0, self.current_cell)
             self.current_cell = self.current_cell.parent

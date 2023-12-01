@@ -157,15 +157,22 @@ class Level2:
         if len(self.solution_order) == 0:
             self.get_doors_keys()
             self.find_path()
-            for cell in self.solution_order:
-                if cell.type == Cell_Type.KEY:
-                    door_available = False
-                    door = 'D' +  cell.cell_value[1]
-                    for subcell in self.solution_order:
-                        if subcell.type == Cell_Type.DOOR and subcell.cell_value == door:
-                            door_available = True
-                    if door_available==False:
-                        self.solution_order.remove(cell)
+            
+        cells_to_remove = []
+
+        for cell in self.solution_order:
+            if cell.type == Cell_Type.KEY:
+                door_available = False
+                door = 'D' +  cell.cell_value[1]
+                for subcell in self.solution_order:
+                    if subcell.type == Cell_Type.DOOR and subcell.cell_value == door:
+                        door_available = True
+                if not door_available:
+                    cells_to_remove.append(cell)
+
+        # Remove the unnecessary cells after the loop
+        for cell in cells_to_remove:
+            self.solution_order.remove(cell)
         
         if self.current_index < len(self.solution_order) - 1:
             if(self.search == None or self.search.is_completed):
