@@ -105,7 +105,7 @@ class Game:
         if not self.search.is_completed:
             if pygame.mixer.music.get_busy():
                 pygame.mixer.music.pause()
-            self.matrix.draw(self.current_floor)
+            self.matrix.draw(self.search.current_floor)
             self.search.run()
             self.end = time.time()
         else:
@@ -113,7 +113,7 @@ class Game:
                 pygame.mixer.music.play()
             pygame.time.wait(100)
             self.matrix.draw_solution(
-                self.search.solution, self.current_floor, self.naruto
+                self.search.solution, self.naruto
             )
             self.show_score()
         return
@@ -263,7 +263,7 @@ class Game:
         self.screen.blit(text, textRect)
 
     def set_up(self):
-        self.current_map = "1"
+        self.current_map = "2"
         self.current_level = "3"
         self.current_algorithm = "Tree based"
         if self.current_map is None or self.current_level is None:

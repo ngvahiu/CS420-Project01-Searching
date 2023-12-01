@@ -140,7 +140,10 @@ class Matrix:
     def get_center_cell(self, x, y):
         return (float(x * TILE + TILE / 2), float(y * TILE + TILE / 2))
 
-    def draw_solution(self, solution: list, current_floor, naruto):
+    def draw_solution(self, solution: list, naruto):
+        current_floor = solution[self.current_solution_step
+            if self.current_solution_step < len(solution)
+            else len(solution) - 1].floor
         [cell.draw_heat() for cell in self.grid_cells[current_floor]]
         (x1, y1) = self.get_center_cell(solution[0].x, solution[0].y)
         for index in range(
@@ -152,7 +155,8 @@ class Matrix:
             (x2, y2) = self.get_center_cell(solution[index].x, solution[index].y)
 
             # draw path between 2 centers
-            pygame.draw.line(self.sc, pygame.Color("#66ccff"), (x1, y1), (x2, y2), 2)
+            if solution[index-1].floor == current_floor:
+                pygame.draw.line(self.sc, pygame.Color("#66ccff"), (x1, y1), (x2, y2), 2)
 
             (x1, y1) = (x2, y2)
 
@@ -221,7 +225,7 @@ class Cell:
         return (self.cost + self.heuristic) < (other.cost + other.heuristic)
 
     def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
+        return self.x == other.x and self.y == other.y and self.floor == other.floor
 
     def draw(self):
         x, y = self.x * TILE, self.y * TILE

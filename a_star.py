@@ -10,6 +10,7 @@ class A_star:
         goal_cell: Cell = None,
         grid_cells=None,
         key_set=None,
+        stair_set = None
     ) -> None:
         self.grid_cells = grid_cells
         self.goal_cell = goal_cell
@@ -19,6 +20,7 @@ class A_star:
         self.cell_traverse_count = 0
         self.solution = []
         self.key_set = key_set
+        self.stair_set = stair_set
         heapq.heapify(self.frontier)
 
     def manhattan_distance(self, current_cell):
@@ -43,6 +45,11 @@ class A_star:
                 and neighbor_cell.key not in self.key_set
             ):
                 # print(neighbor_cell.cell_value)
+                continue
+            if(
+                (neighbor_cell.type == Cell_Type.UP or neighbor_cell.type == Cell_Type.DOWN)
+                and self.stair_set is not None and not neighbor_cell == self.stair_set[neighbor_cell.cell_value + ' ' + str(neighbor_cell.floor)]
+            ):
                 continue
             neighbor_cell.heuristic = self.manhattan_distance(neighbor_cell)
             neighbor_cell.cost = self.current_cell.cost + 1

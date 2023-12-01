@@ -25,7 +25,8 @@ class Level3:
         self.current_index = 0
         self.key_set = set()
         self.is_completed = False
-
+        self.delete_along = {}
+        self.stair_set = {}
         self.current_floor = 1
         self.go_up = go_up
         self.go_down = go_down
@@ -138,5 +139,153 @@ class Level3:
                 cell.cost = 0
                 cell.parent = None
 
+    def find_path(self):
+        key_set = set()
+        stair_set = {}
+        if(self.start_cell == self.goal_cell):
+            return [self.start_cell]
+        path = [self.start_cell]
+        for cell in self.start_cell.flood_to:
+            if cell.type == Cell_Type.KEY:
+                key_set.add(cell.cell_value)
+                index = path.index(self.start_cell)
+                path.insert(index+1, cell)
+        while(self.goal_cell not in path):
+            for cell in self.start_cell.flood_to:
+                if cell.type == Cell_Type.DOOR:
+                    key = 'K' + cell.cell_value[1]
+                    if key in key_set:
+                        self.helper(cell, self.goal_cell, key_set, path, stair_set)
+                        if self.goal_cell in path:
+                            break
+                elif cell.type == Cell_Type.DOWN or cell.type == Cell_Type.UP:
+                    self.helper(cell, self.goal_cell, key_set, path, stair_set)
+                    if self.goal_cell in path:
+                        break
+                elif cell.type == Cell_Type.GOAL:
+                    path.append(cell)
+                    break
+        self.stair_set = stair_set
+        self.solution_order = path
+   
+    def helper(self, start_cell, goal_cell, key_set, path, stair_set):
+        added = False
+        for cell in start_cell.flood_to:
+            if cell.type == Cell_Type.KEY and cell not in path:
+                if(start_cell.type == Cell_Type.DOWN or start_cell.type == Cell_Type.UP):
+                    if stair_set.get(start_cell.cell_value + ' ' + str(start_cell.floor)) is None:
+                        path.append(start_cell)
+                        stair_set[start_cell.cell_value + ' ' + str(start_cell.floor)] =start_cell
+                        added = True
+                else:
+                    path.append(start_cell)
+                    added=True
+                key_set.add(cell.cell_value)
+                path.append(cell)
+        if added:
+            return path.index(start_cell)
+        for cell in start_cell.flood_to:
+            if cell.type == Cell_Type.DOOR or cell.type == Cell_Type.DOWN or cell.type == Cell_Type.UP:
+                if start_cell.type == cell.type and start_cell.cell_value == cell.cell_value:
+                        continue
+            if cell.type == Cell_Type.DOOR:
+                key = 'K' + cell.cell_value[1]
+                if key in key_set:
+                    index = self.helper(cell, goal_cell, key_set, path, stair_set)
+                    if index != -1:
+                        if start_cell not in path:
+                            path.insert(index, start_cell)
+                            stair_set[start_cell.cell_value + ' ' + str(start_cell.floor)] =start_cell
+                        return index
+            elif cell.type == Cell_Type.DOWN or cell.type == Cell_Type.UP:
+                index = self.helper(cell, goal_cell, key_set, path,stair_set)
+                if index != -1:
+                    if start_cell not in path and (start_cell.cell_value + ' ' + str(start_cell.floor)) not in stair_set:
+                        path.insert(index, start_cell)
+                        stair_set[start_cell.cell_value + ' ' + str(start_cell.floor)] =start_cell
+                    return index
+            elif cell.type == Cell_Type.GOAL:
+                    if start_cell not in path:
+                        if start_cell.type == Cell_Type.DOWN or start_cell.type == Cell_Type.UP:
+                            if stair_set.get(start_cell.cell_value + ' ' + str(start_cell.floor)) is None:
+                                path.append(start_cell)
+                        else:
+                            path.append(start_cell)
+                    path.append(cell)
+                    return len(path) - 2
+        return -1
+        
+
+    
+
     def run(self):
-        self.get_doors_keys()
+        if self.is_completed == True:
+            return
+        if len(self.solution_order) == 0:
+            self.get_doors_keys()
+            self.find_path()
+            cells_to_remove = []
+            current_keep_index = 0
+            for  cell in self.solution_order:
+                if cell.type == Cell_Type.KEY:
+                    door_available = False
+                    door = 'D' +  cell.cell_value[1]
+                    for subcell in self.solution_order:
+                        if subcell.type == Cell_Type.DOOR and subcell.cell_value == door:
+                            door_available = True
+                    if not door_available:
+                        cells_to_remove.append(cell)
+
+            # Remove the unnecessary cells after the loop
+            for cell in cells_to_remove:
+                self.solution_order.remove(cell)
+
+            changed = True
+            while(changed is True):
+                changed = False
+                previous_cell_index = 0
+                for i in range(1, len(self.solution_order)):
+                    previous_cell = self.solution_order[previous_cell_index]
+                    current_cell = self.solution_order[i]
+                    if(previous_cell.floor != current_cell.floor):
+                        if(previous_cell.type == Cell_Type.UP and current_cell.type == Cell_Type.DOWN and current_cell.floor - previous_cell.floor == 1):
+                            pass
+                        elif(previous_cell.type == Cell_Type.DOWN and current_cell.type == Cell_Type.UP and previous_cell.floor - current_cell.floor == 1):
+                            pass
+                        else:
+                            changed = True
+                            if(previous_cell.floor > current_cell.floor):
+                                floor = current_cell.floor
+                                while(floor < previous_cell.floor):
+                                    self.solution_order.insert(i, self.stair_set['UP '+ str(floor)])
+                                    self.solution_order.insert(i, self.stair_set['DO ' + str(floor+1)])
+                                    floor+=1
+                            else:
+                                floor = current_cell.floor
+                                while(floor > previous_cell.floor):
+                                    self.solution_order.insert(i, self.stair_set['DO ' + str(floor)])
+                                    self.solution_order.insert(i, self.stair_set['UP ' + str(floor-1)])
+                                    floor-=1
+                            break
+                    previous_cell_index = i
+            
+
+
+        
+        if self.current_index < len(self.solution_order) - 1:
+            if(self.search == None or self.search.is_completed):
+                self.clear_visited_cells()
+                if(self.solution_order[self.current_index].floor != self.solution_order[self.current_index+1].floor):
+                    self.current_index+=1
+                else:
+                    self.current_floor = self.solution_order[self.current_index].floor
+                    self.search = A_star(self.solution_order[self.current_index], self.solution_order[self.current_index+1], self.grid_cells[self.current_floor], self.key_set, self.stair_set)
+            else:
+                self.search.run()
+                if(self.search.is_completed):
+                    if(self.solution_order[self.current_index+1].type == Cell_Type.KEY):
+                        self.key_set.add('K' + self.solution_order[self.current_index+1].cell_value[1])
+                    self.solution.extend(self.search.solution)
+                    self.current_index += 1
+        else:
+            self.is_completed = True
