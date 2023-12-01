@@ -120,8 +120,10 @@ class Level2:
                 if cell.type == Cell_Type.DOOR:
                     key = 'K' + cell.cell_value[1]
                     if key in key_set:
-                        self.helper(cell, self.goal_cell, key_set, path)
+                        index = self.helper(cell, self.goal_cell, key_set, path)
                         if self.goal_cell in path:
+                            if cell not in path:
+                                path.insert(index, cell)
                             break
                 elif cell.type == Cell_Type.GOAL:
                     path.append(cell)
@@ -132,22 +134,27 @@ class Level2:
     def helper(self, start_cell, goal_cell, key_set, path):
         if start_cell.type == Cell_Type.DOOR and start_cell.cell_value == 'D4':
             print(start_cell.cell_value)
-        if(start_cell not in path):
-            path.append(start_cell)
+        should_add = False
         for cell in start_cell.flood_to:
             if cell.type == Cell_Type.KEY and cell not in path:
+                if should_add == False:
+                    should_add = True
+                    if(start_cell not in path):
+                        path.append(start_cell)
                 key_set.add(cell.cell_value)
                 path.append(cell)
         for cell in start_cell.flood_to:
             if cell.type == Cell_Type.DOOR:
                 key = 'K' + cell.cell_value[1]
                 if key in key_set:
-                    self.helper(cell, goal_cell, key_set, path)
+                    index = self.helper(cell, goal_cell, key_set, path)
                     if goal_cell in path:
-                        return
+                        if cell not in path:
+                            path.insert(index, cell)
+                        return index
             elif cell.type == Cell_Type.GOAL:
                     path.append(cell)
-                    return
+                    return path.index(cell)
 
     
 
