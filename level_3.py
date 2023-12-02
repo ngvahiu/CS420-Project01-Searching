@@ -217,9 +217,6 @@ class Level3:
                         return len(path) - 2
                     return len(path) - 1
         return -1
-        
-
-    
 
     def run(self):
         if self.is_completed == True:
@@ -228,11 +225,12 @@ class Level3:
             self.get_doors_keys()
             self.find_path()
 
-
+            #Clean flood to list of cells in solution order list
             for cell in self.solution_order:
                 result_list = [new_cell for new_cell in cell.flood_to if new_cell in self.solution_order]
                 cell.flood_to = result_list
             
+            #Remove keys that are not used, and DOOR, UP, DOWN node in leaf
             changed = True
             while changed:
                 changed = False
@@ -271,6 +269,8 @@ class Level3:
                 for cell in cells_to_remove:
                     self.solution_order.remove(cell)
 
+            
+            #Add UP and DOWN node to travel up down
             changed = True
             while(changed is True):
                 changed = False
@@ -301,6 +301,7 @@ class Level3:
                     previous_cell_index = i
 
         
+        #Search for path for each two adjacent cells in solution order
         if self.current_index < len(self.solution_order) - 1:
             if(self.search == None or self.search.is_completed):
                 self.clear_visited_cells()
