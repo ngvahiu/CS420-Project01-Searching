@@ -224,6 +224,20 @@ class Level3:
         if len(self.solution_order) == 0:
             self.get_doors_keys()
             self.find_path()
+            
+            cells_to_remove = []
+
+            #Clean duplicate door cells:
+            for cell in self.solution_order:
+                if cell.type == Cell_Type.DOOR:
+                    for subcell in self.solution_order:
+                        if subcell.type == cell.type and subcell != cell and subcell.cell_value == cell.cell_value and subcell not in cells_to_remove and cell not in cells_to_remove:
+                            cells_to_remove.append(subcell)
+            
+            # Remove the unnecessary cells after the loop
+            for cell in cells_to_remove:
+                self.solution_order.remove(cell)
+
 
             #Clean flood to list of cells in solution order list
             for cell in self.solution_order:
