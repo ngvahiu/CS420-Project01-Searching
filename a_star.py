@@ -48,7 +48,7 @@ class A_star:
                 continue
             if(
                 (neighbor_cell.type == Cell_Type.UP or neighbor_cell.type == Cell_Type.DOWN)
-                and self.stair_set is not None and not neighbor_cell == self.stair_set[neighbor_cell.cell_value + ' ' + str(neighbor_cell.floor)]
+                and neighbor_cell != self.goal_cell
             ):
                 continue
             neighbor_cell.heuristic = self.manhattan_distance(neighbor_cell)

@@ -215,6 +215,7 @@ class Cell:
         self.cell_value = cell_value
         self.flood_to = []
         self.flooded_from = []
+        self.children = []
         self.font = pygame.font.Font(None, 36)
 
         if type == Cell_Type.DOOR:

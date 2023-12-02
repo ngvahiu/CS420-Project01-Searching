@@ -90,14 +90,14 @@ class Level3:
     def get_doors_keys(self):
         while self.flood_cells:
             flood_cell = self.flood_cells.pop(0)
-            print(
-                "Check: ",
-                flood_cell.x,
-                flood_cell.y,
-                flood_cell.floor,
-                flood_cell.type,
-                flood_cell.cell_value,
-            )
+            # print(
+            #     "Check: ",
+            #     flood_cell.x,
+            #     flood_cell.y,
+            #     flood_cell.floor,
+            #     flood_cell.type,
+            #     flood_cell.cell_value,
+            # )
 
             if not flood_cell.flood_to:
                 self.flood_fill(flood_cell)
@@ -119,15 +119,15 @@ class Level3:
                 for cell in same_flooding_range:
                     cell.flood_to = flood_cell.flood_to
 
-            for cell in flood_cell.flood_to:
-                print(
-                    "Flood to: ",
-                    cell.x,
-                    cell.y,
-                    cell.type,
-                    cell.cell_value,
-                )
-            print()
+            # for cell in flood_cell.flood_to:
+            #     print(
+            #         "Flood to: ",
+            #         cell.x,
+            #         cell.y,
+            #         cell.type,
+            #         cell.cell_value,
+            #     )
+            # print()
 
         self.clear_visited_cells()
 
@@ -178,8 +178,9 @@ class Level3:
                         stair_set[start_cell.cell_value + ' ' + str(start_cell.floor)] =start_cell
                         added = True
                 else:
-                    path.append(start_cell)
-                    added=True
+                    if start_cell not in path:
+                        path.append(start_cell)
+                        added=True
                 key_set.add(cell.cell_value)
                 path.append(cell)
         if added:
@@ -211,8 +212,10 @@ class Level3:
                                 path.append(start_cell)
                         else:
                             path.append(start_cell)
-                    path.append(cell)
-                    return len(path) - 2
+                    if cell not in path:
+                        path.append(cell)
+                        return len(path) - 2
+                    return len(path) - 1
         return -1
         
 
@@ -224,21 +227,49 @@ class Level3:
         if len(self.solution_order) == 0:
             self.get_doors_keys()
             self.find_path()
-            cells_to_remove = []
-            current_keep_index = 0
-            for  cell in self.solution_order:
-                if cell.type == Cell_Type.KEY:
-                    door_available = False
-                    door = 'D' +  cell.cell_value[1]
-                    for subcell in self.solution_order:
-                        if subcell.type == Cell_Type.DOOR and subcell.cell_value == door:
-                            door_available = True
-                    if not door_available:
-                        cells_to_remove.append(cell)
 
-            # Remove the unnecessary cells after the loop
-            for cell in cells_to_remove:
-                self.solution_order.remove(cell)
+
+            for cell in self.solution_order:
+                result_list = [new_cell for new_cell in cell.flood_to if new_cell in self.solution_order]
+                cell.flood_to = result_list
+            
+            changed = True
+            while changed:
+                changed = False
+                cells_to_remove = []
+                for  cell in self.solution_order:
+                    if cell.type == Cell_Type.KEY:
+                        door_available = False
+                        door = 'D' +  cell.cell_value[1]
+                        for subcell in self.solution_order:
+                            if subcell.type == Cell_Type.DOOR and subcell.cell_value == door:
+                                door_available = True
+                        if not door_available:
+                            cells_to_remove.append(cell)
+
+                if len(cells_to_remove) > 0:
+                    changed = True
+
+                # Remove the unnecessary cells after the loop
+                for cell in cells_to_remove:
+                    self.solution_order.remove(cell)
+                
+                cells_to_remove = []
+                
+                for cell in self.solution_order:
+                    result_list = [new_cell for new_cell in cell.flood_to if new_cell in self.solution_order]
+                    if len(result_list) != len(cell.flood_to):
+                       changed=True
+                    if len(result_list) == 0 and (cell.type == Cell_Type.UP or cell.type == Cell_Type.DOWN or cell.type==Cell_Type.DOOR):
+                        cells_to_remove.append(cell)
+                    cell.flood_to = result_list
+                
+                if len(cells_to_remove) > 0:
+                    changed = True
+                
+                # Remove the unnecessary cells after the loop
+                for cell in cells_to_remove:
+                    self.solution_order.remove(cell)
 
             changed = True
             while(changed is True):
@@ -268,8 +299,6 @@ class Level3:
                                     floor-=1
                             break
                     previous_cell_index = i
-            
-
 
         
         if self.current_index < len(self.solution_order) - 1:
