@@ -7,6 +7,7 @@ from pygame import mixer
 from a_star import A_star
 from bfs import BFS
 from blind_search_level_2 import BlindSearchLevel2
+from level_4 import Level4
 from constants import (
     COLOR_ACTIVE,
     COLOR_INACTIVE,
@@ -110,7 +111,8 @@ class Game:
             self.end = time.time()
         else:
             if not pygame.mixer.music.get_busy():
-                pygame.mixer.music.play()
+                # pygame.mixer.music.play()
+                pass
             pygame.time.wait(100)
             self.matrix.draw_solution(
                 self.search.solution, self.naruto
@@ -263,8 +265,8 @@ class Game:
         self.screen.blit(text, textRect)
 
     def set_up(self):
-        self.current_map = "2"
-        self.current_level = "3"
+        self.current_map = "1"
+        self.current_level = "4"
         self.current_algorithm = "Tree based"
         if self.current_map is None or self.current_level is None:
             print(self.current_map, self.current_level)
@@ -307,6 +309,14 @@ class Game:
                 )
             elif self.current_level == "3":
                 self.search = Level3(
+                    self.matrix.start_cell,
+                    self.matrix.goal_cell,
+                    self.matrix.grid_cells,
+                    self.go_up,
+                    self.go_down,
+                )
+            elif self.current_level == "4":
+                self.search = Level4(
                     self.matrix.start_cell,
                     self.matrix.goal_cell,
                     self.matrix.grid_cells,

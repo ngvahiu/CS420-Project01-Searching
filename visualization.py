@@ -11,6 +11,8 @@ class Matrix:
         self.sc = sc
         self.start_cell = None
         self.goal_cell = None
+        self.sub_goal_cell = []
+        self.sub_start_cell =[]
         self.grid_cells = {}
         self.key_cells = {}
         self.door_cells = {}
@@ -82,47 +84,49 @@ class Matrix:
                             )
                             self.grid_cells[int(current_floor)].append(cell)
                             self.door_cells[int(current_floor)].append(cell)
-                        elif cell_value.isdigit():
-                            value = int(cell_value)
-                            cell = None
-                            if value == 1:
-                                cell_type = Cell_Type.START
-                                cell = Cell(
-                                    j,
-                                    i,
-                                    self.sc,
-                                    int(current_floor),
-                                    rows,
-                                    cols,
-                                    cell_type,
-                                )
+                        elif cell_value[0] == "A":
+                            cell_type = Cell_Type.START
+                            cell = Cell(
+                                j,
+                                i,
+                                self.sc,
+                                int(current_floor),
+                                rows,
+                                cols,
+                                cell_type,
+                                cell_value=cell_value,
+                            )
+                            if(cell_value[1] == '1'):
                                 self.start_cell = cell
-                                self.grid_cells[int(current_floor)].append(cell)
-                            elif value == 2:
-                                cell_type = Cell_Type.GOAL
-                                cell = Cell(
-                                    j,
-                                    i,
-                                    self.sc,
-                                    int(current_floor),
-                                    rows,
-                                    cols,
-                                    cell_type,
-                                )
+                            self.grid_cells[int(current_floor)].append(cell)
+                        elif cell_value[0] == 'T':
+                            cell_type = Cell_Type.GOAL
+                            cell = Cell(
+                                j,
+                                i,
+                                self.sc,
+                                int(current_floor),
+                                rows,
+                                cols,
+                                cell_type,
+                                cell_value=cell_value,
+                            )
+                            if(cell_value[1] == '1'):
                                 self.goal_cell = cell
-                                self.grid_cells[int(current_floor)].append(cell)
-                            else:
-                                cell_type = Cell_Type.BLANK
-                                cell = Cell(
-                                    j,
-                                    i,
-                                    self.sc,
-                                    int(current_floor),
-                                    rows,
-                                    cols,
-                                    cell_type,
-                                )
-                                self.grid_cells[int(current_floor)].append(cell)
+                            self.grid_cells[int(current_floor)].append(cell)
+                        elif cell_value.isdigit():
+                            cell_type = Cell_Type.BLANK
+                            cell = Cell(
+                                j,
+                                i,
+                                self.sc,
+                                int(current_floor),
+                                rows,
+                                cols,
+                                cell_type,
+                                cell_value=cell_value,
+                            )
+                            self.grid_cells[int(current_floor)].append(cell)
 
                         else:
                             cell_type = Cell_Type.OBSTACLE
@@ -132,7 +136,7 @@ class Matrix:
                             self.grid_cells[int(current_floor)].append(cell)
                     i += 1
 
-        # file.close()
+        print(123)
 
     def draw(self, current_floor):
         [cell.draw() for cell in self.grid_cells[current_floor]]
