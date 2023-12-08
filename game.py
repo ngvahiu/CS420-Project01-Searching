@@ -7,7 +7,6 @@ from pygame import mixer
 from a_star import A_star
 from bfs import BFS
 from blind_search_level_2 import BlindSearchLevel2
-from level_4 import Level4
 from constants import (
     COLOR_ACTIVE,
     COLOR_INACTIVE,
@@ -22,6 +21,7 @@ from constants import (
 from dfs import DFS
 from dropdown import DropDown
 from level_3 import Level3
+from level_4 import Level4
 from tree_based_level_2 import TreeBasedLevel2
 from visualization import Matrix
 
@@ -114,9 +114,7 @@ class Game:
                 # pygame.mixer.music.play()
                 pass
             pygame.time.wait(100)
-            self.matrix.draw_solution(
-                self.search.solution, self.naruto
-            )
+            self.matrix.draw_solution(self.search.solution, self.naruto)
             self.show_score()
         return
 
