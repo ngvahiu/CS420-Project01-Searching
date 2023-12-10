@@ -110,15 +110,6 @@ class Game:
             self.search.run()
             self.end = time.time()
             print(str(round(self.end - self.start, 1)))
-        #         def show_time(self):
-        # text = self.font.render(
-        #     "Running time: " + str(round(self.end - self.start, 1)) + "s",
-        #     True,
-        #     (255, 255, 255),
-        # )
-        # textRect = text.get_rect()
-        # textRect.center = (WINDOW_WIDTH - 3 * TILE + 2, TILE * 5 + 60)
-        # self.screen.blit(text, textRect)
         else:
             if self.search.fail_to_solve:
                 self.matrix.draw(self.search.current_floor)
@@ -133,6 +124,7 @@ class Game:
                 self.matrix.draw_solution(
                     self.search.solution, self.characters
                 )
+                self.matrix.export_images(self.search.solution)
                 self.show_score()
         return
 

@@ -1,8 +1,9 @@
 from enum import Enum
 import queue
 import pygame
+from PIL import Image, ImageDraw, ImageFont
 
-from constants import TILE
+from constants import TILE, WINDOW_WIDTH, WINDOW_HEIGHT
 
 class Cell_Type(Enum):
     OBSTACLE = "OBSTACLE"
@@ -263,7 +264,32 @@ class Matrix:
             self.sc.blit(characters[0], (x1 - TILE / 2, y1 - TILE / 2))
             if self.current_solution_step < len(solution):
                 self.current_solution_step += 1
-        pygame.image.save(self.sc, 'solution_image.png')
+    
+    def export_images(self, solution):
+        # Create a new image
+        image_size = (WINDOW_WIDTH, WINDOW_HEIGHT)
+        image = Image.new("RGB", image_size, "green")
+        draw = ImageDraw.Draw(image)
+        floor_count = len(self.grid_cells.keys())
+        # font = ImageFont.load_default()
+        if not isinstance(solution[0], list):
+            [cell.draw_heat_image(draw) for cell in self.grid_cells[1]]
+            for i in range(len(solution)-1):
+                start_point = self.get_center_cell(solution[i].x, solution[i].y)
+                end_point = self.get_center_cell(solution[i+1].x, solution[i+1].y)
+                draw.line([start_point, end_point], fill="blue", width=2)
+        else:
+            for item in solution:            
+
+                    # Draw the solution path on the image
+                    # pass
+                for i in range(len(item) - 1):
+                    start_point = (item[i].x, item[i].y)
+                    end_point = (item[i + 1].x, item[i + 1].y)
+                    draw.line([start_point, end_point], fill="blue", width=2)
+
+        # # Save the image
+        image.save('test.jpg')
 
     def flood_fill(self, flood_cell):
         flood_cell.visited = True
@@ -432,6 +458,33 @@ class Cell:
             self.sc, pygame.Color("gray"), (x + TILE, y + TILE), (x, y + TILE), 2
         )
         pygame.draw.line(self.sc, pygame.Color("gray"), (x, y + TILE), (x, y), 2)
+    
+    def draw_heat_image(self, draw):
+        x, y = self.x * TILE, self.y * TILE
+        x2, y2 = self.x*TILE + TILE, self.y*TILE + TILE
+        value = [(x,y), (x2,y2)]
+        if self.type == Cell_Type.OBSTACLE:
+            draw.rectangle(value, fill="#810000", outline=None, width=1)
+        elif self.type == Cell_Type.START:
+            draw.rectangle(value, fill="#e4611b", outline=None, width=1)
+        elif self.type == Cell_Type.GOAL:
+            draw.rectangle(value, fill="#2db300", outline=None, width=1)
+        # elif self.type == Cell_Type.KEY:
+        #     self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (244, 206, 20))
+        elif (
+            self.type == Cell_Type.DOOR
+            or self.type == Cell_Type.UP
+            or self.type == Cell_Type.DOWN
+        ):
+            draw.rectangle(value, fill="#810000", outline=None, width=1)
+            # self.draw_text_in_center(self.cell_value, x, y, TILE, TILE, (255, 255, 255))
+
+        draw.line([x, y, x, y2], fill="gray",  width=2)
+        draw.line([x, y, x2, y], fill="gray", width=2)
+        draw.line([x2, y, x2, y2], fill="gray", width=2)
+        draw.line([x, y2, x2, y2], fill="gray", width=2)
+
+
 
     def draw_heat(self):
         x, y = self.x * TILE, self.y * TILE

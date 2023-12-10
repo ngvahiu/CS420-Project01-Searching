@@ -63,6 +63,7 @@ class Level4:
             if(count == 10000):
                 self.fail_to_solve = True
                 self.is_completed == True
+                return
             node = heapq.heappop(self.open)
             conflict_list = node.validate([])
             if len(conflict_list) == 0:
@@ -85,14 +86,14 @@ class Level4:
                     heapq.heappush(self.open, new_node)
     
     def generate_random_path(self, solution, key_set, depth):
-        self.attempt +=1
-        if self.attempt >= 2345678:
-            self.is_completed = True
-            self.fail_to_solve = True
         if depth == 950:
             return
         if self.is_completed:
             return
+        self.attempt +=1
+        if self.attempt >= 2345678:
+            self.is_completed = True
+            self.fail_to_solve = True
         copy_solution = [[sub_item for sub_item in item] for item in solution]
         full = True
         min = copy_solution[0]
