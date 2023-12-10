@@ -5,6 +5,7 @@ import pygame
 from pygame import mixer
 
 from a_star import A_star
+from ucs import UCS
 from bfs import BFS
 from blind_search_level_2 import BlindSearchLevel2
 from constants import (
@@ -34,7 +35,7 @@ class Game:
     def __init__(self, screen, characters):
         self.current_level = None
         self.levels = {
-            1: ["DFS", "BFS", "A_Star"],
+            1: ["DFS", "BFS", "A_Star", "UCS"],
             2: ["Blind Search", "Tree based"],
             3: ["Tree based"],
             4: ["CBS + A_Star"]
@@ -314,6 +315,14 @@ class Game:
             )
         elif self.current_algorithm == "A_Star":
             self.search = A_star(
+                self.matrix.start_cell,
+                self.matrix.goal_cell,
+                self.matrix.grid_cells[1],
+                set(),
+                [], self.matrix.start_cell
+            )
+        elif self.current_algorithm == "UCS":
+            self.search = UCS(
                 self.matrix.start_cell,
                 self.matrix.goal_cell,
                 self.matrix.grid_cells[1],
