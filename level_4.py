@@ -92,7 +92,7 @@ class Level4:
         if self.is_completed:
             return
         self.attempt +=1
-        if self.attempt >= 7777:
+        if self.attempt >= 500000:
             self.is_completed = True
             self.fail_to_solve = True
         copy_solution = [[sub_item for sub_item in item] for item in solution]
