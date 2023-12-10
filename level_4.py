@@ -1,422 +1,236 @@
-import queue
-
-from a_star import A_star
 from visualization import Cell, Cell_Type
-
-
+import random
+import heapq
+from level_3  import Level3
 class Level4:
     def __init__(
         self,
         start_cell: Cell = None,
         goal_cell: Cell = None,
         grid_cells=None,
-        go_up=None,
-        go_down=None,
+        sub_goal_cell= None,
+        sub_start_cell= None,
+        constraints = {},
+        solution = [],
+        search = []
     ) -> None:
         self.start_cell = start_cell
         self.goal_cell = goal_cell
         self.grid_cells = grid_cells
-        self.solution = []
-        self.solution_order = []
-        self.search = None
+        self.search = search
         self.cell_traverse_count = 0
-        self.flood_cells = []
-        self.flood_cells.append(start_cell)
-        self.current_index = 0
         self.key_set = set()
         self.is_completed = False
-        self.delete_along = {}
-        self.stair_set = {}
+        self.sub_goal_cell = sub_goal_cell
+        self.sub_start_cell = sub_start_cell
+        self.fail_to_solve = False
+        self.children = []
+        self.solution = []
         self.current_floor = 1
-        self.go_up = go_up
-        self.go_down = go_down
-
-    def flood_fill(self, flood_cell: Cell):
-        self.current_floor = flood_cell.floor
-
-        flood_cell.visited = True
-        current_cell = flood_cell
-        _queue = queue.Queue()
-
-        while current_cell:
-            neighbors = current_cell.check_neighbors(
-                self.grid_cells[self.current_floor]
-            )
-
-            for cell in neighbors:
-                if cell.type == Cell_Type.KEY or cell.type == Cell_Type.GOAL:
-                    if cell not in flood_cell.flood_to:
-                        cell.flooded_from.append(flood_cell)
-                        flood_cell.flood_to.append(cell)
-                        _queue.put(cell)
-                    continue
-                if cell.type == Cell_Type.DOOR:
-                    if cell not in flood_cell.flood_to:
-                        cell.flooded_from.append(flood_cell)
-                        flood_cell.flood_to.append(cell)
-                        if cell not in self.flood_cells:
-                            self.flood_cells.append(cell)
-                    continue
-                if cell.type == Cell_Type.UP:
-                    if cell not in flood_cell.flood_to:
-                        cell.flooded_from.append(flood_cell)
-                        flood_cell.flood_to.append(cell)
-                        cell.visited = True
-                        # add next DOWN cell of upper floor to flood_cells
-                        find_index = lambda x, y: x + y * cell.cols
-                        next_down_cell = self.grid_cells[self.current_floor + 1][
-                            find_index(cell.x, cell.y)
-                        ]
-                        cell.flood_to.append(next_down_cell)
-                        next_down_cell.flooded_from.append(cell)
-                        if next_down_cell not in self.flood_cells:
-                            self.flood_cells.append(next_down_cell)
-                    continue
-                if cell.type == Cell_Type.DOWN:
-                    if cell not in flood_cell.flood_to:
-                        cell.flooded_from.append(flood_cell)
-                        flood_cell.flood_to.append(cell)
-                        cell.visited = True
-
-                    continue
-
-                cell.visited = True
-                _queue.put(cell)
-
-            if not _queue.empty():
-                current_cell = _queue.get()
-            else:
-                current_cell = None
-
-    def get_doors_keys(self):
-        while self.flood_cells:
-            flood_cell = self.flood_cells.pop(0)
-            print(
-                "Check: ",
-                flood_cell.x,
-                flood_cell.y,
-                flood_cell.floor,
-                flood_cell.type,
-                flood_cell.cell_value,
-            )
-
-            if not flood_cell.flood_to:
-                self.flood_fill(flood_cell)
-
-                # Find which cells have same flooding range with flood_cell
-                same_flooding_range = []
-                for cell in self.flood_cells:
-                    if cell in flood_cell.flood_to:
-                        # check if two cells are flooded by same cell
-                        for c in cell.flooded_from:
-                            if c in flood_cell.flooded_from:
-                                same_flooding_range.append(cell)
-                                break
-                    # if the flood cell is 'DOWN' cell, add its adjacent 'DOWN' cell to the same_flooding_range
-                    if (
-                        flood_cell.type == Cell_Type.DOWN
-                        and cell.type == Cell_Type.DOWN
-                        and flood_cell.floor == cell.floor
-                    ):
-                        same_flooding_range.append(cell)
-
-                for cell in same_flooding_range:
-                    cell.flooded_from.remove(flood_cell)
-                    flood_cell.flood_to.remove(cell)
-
-                for cell in same_flooding_range:
-                    cell.flood_to = [cell for cell in flood_cell.flood_to]
-
-            for cell in flood_cell.flood_to:
-                print(
-                    "Flood to: ",
-                    cell.x,
-                    cell.y,
-                    cell.type,
-                    cell.cell_value,
-                )
-            print()
-
-        self.clear_visited_cells()
-
-    def clear_visited_cells(self):
-        for index in self.grid_cells:
-            for cell in self.grid_cells[index]:
-                cell.visited = False
-                cell.heuristic = 0
-                cell.cost = 0
-                cell.parent = None
-
-    def find_path(self):
-        key_set = set()
-        stair_set = {}
-        if self.start_cell == self.goal_cell:
-            return [self.start_cell]
-        path = [self.start_cell]
-        for cell in self.start_cell.flood_to:
-            if cell.type == Cell_Type.KEY:
-                key_set.add(cell.cell_value)
-                index = path.index(self.start_cell)
-                path.insert(index + 1, cell)
-        while self.goal_cell not in path:
-            for cell in self.start_cell.flood_to:
-                if cell.type == Cell_Type.DOOR:
-                    key = "K" + cell.cell_value[1]
-                    if key in key_set:
-                        self.helper(cell, self.goal_cell, key_set, path, stair_set)
-                        if self.goal_cell in path:
-                            break
-                elif cell.type == Cell_Type.DOWN or cell.type == Cell_Type.UP:
-                    self.helper(cell, self.goal_cell, key_set, path, stair_set)
-                    if self.goal_cell in path:
-                        break
-                elif cell.type == Cell_Type.GOAL:
-                    path.append(cell)
-                    break
-        self.stair_set = stair_set
-        self.solution_order = path
-
-    def helper(self, start_cell, goal_cell, key_set, path, stair_set):
-        added = False
-        for cell in start_cell.flood_to:
-            if cell.type == Cell_Type.KEY and cell not in path:
-                if start_cell.type == Cell_Type.DOWN or start_cell.type == Cell_Type.UP:
-                    if (
-                        stair_set.get(
-                            start_cell.cell_value + " " + str(start_cell.floor)
-                        )
-                        is None
-                    ):
-                        path.append(start_cell)
-                        stair_set[
-                            start_cell.cell_value + " " + str(start_cell.floor)
-                        ] = start_cell
-                        added = True
+        self.fail_to_solve = False
+        self.attempt = 0
+        for item in solution:
+            self.solution.append(item)
+        self.constraints = constraints
+        if len(self.solution) == 0:
+            for i in range(len(self.sub_goal_cell)):
+                if i == 0:
+                    self.search.append(Level3(self.sub_start_cell[i], self.sub_goal_cell[i], self.grid_cells, [], [], []))
+                    self.search[i].search()
+                    if self.search[i].fail_to_solve:
+                        self.fail_to_solve =True
+                        self.is_completed = True
+                    self.solution.append(self.search[i].solution)
                 else:
-                    if start_cell not in path:
-                        path.append(start_cell)
-                        added = True
-                key_set.add(cell.cell_value)
-                path.append(cell)
-        if added:
-            return path.index(start_cell)
-        for cell in start_cell.flood_to:
-            if (
-                cell.type == Cell_Type.DOOR
-                or cell.type == Cell_Type.DOWN
-                or cell.type == Cell_Type.UP
-            ):
-                if (
-                    start_cell.type == cell.type
-                    and start_cell.cell_value == cell.cell_value
-                ):
-                    continue
-            if cell.type == Cell_Type.DOOR:
-                key = "K" + cell.cell_value[1]
-                if key in key_set:
-                    index = self.helper(cell, goal_cell, key_set, path, stair_set)
-                    if index != -1:
-                        if start_cell not in path:
-                            path.insert(index, start_cell)
-                            stair_set[
-                                start_cell.cell_value + " " + str(start_cell.floor)
-                            ] = start_cell
-                        return index
-            elif cell.type == Cell_Type.DOWN or cell.type == Cell_Type.UP:
-                index = self.helper(cell, goal_cell, key_set, path, stair_set)
-                if index != -1:
-                    if (
-                        start_cell not in path
-                        and (start_cell.cell_value + " " + str(start_cell.floor))
-                        not in stair_set
-                    ):
-                        path.insert(index, start_cell)
-                        stair_set[
-                            start_cell.cell_value + " " + str(start_cell.floor)
-                        ] = start_cell
-                    return index
-            elif cell.type == Cell_Type.GOAL:
-                if start_cell not in path:
-                    if (
-                        start_cell.type == Cell_Type.DOWN
-                        or start_cell.type == Cell_Type.UP
-                    ):
-                        if (
-                            stair_set.get(
-                                start_cell.cell_value + " " + str(start_cell.floor)
-                            )
-                            is None
-                        ):
-                            path.append(start_cell)
-                    else:
-                        path.append(start_cell)
-                if cell not in path:
-                    path.append(cell)
-                    return len(path) - 2
-                return len(path) - 1
-        return -1
+                    solution_order = [self.sub_start_cell[i], self.sub_goal_cell[i]]
+                    self.search.append(Level3(self.sub_start_cell[i], self.sub_goal_cell[i], self.grid_cells,  solution_order, [], []))
+                    self.search[i].search()
+                    if self.search[i].fail_to_solve:
+                        self.fail_to_solve =True
+                        self.is_completed = True
+                    self.solution.append(self.search[i].solution)
+        self.open = [self]
+        heapq.heapify(self.open)
+        self.cost = 0
+        for item in self.solution:
+            self.cost+= len(item)
 
     def run(self):
-        if self.is_completed == True:
+        if(self.is_completed):
             return
-        if len(self.solution_order) == 0:
-            self.get_doors_keys()
-            self.find_path()
-
-            cells_to_remove = []
-
-            # Clean duplicate door cells:
-            for cell in self.solution_order:
-                if cell.type == Cell_Type.DOOR:
-                    for subcell in self.solution_order:
-                        if (
-                            subcell.type == cell.type
-                            and subcell != cell
-                            and subcell.cell_value == cell.cell_value
-                            and subcell not in cells_to_remove
-                            and cell not in cells_to_remove
-                        ):
-                            cells_to_remove.append(subcell)
-
-            # Remove the unnecessary cells after the loop
-            for cell in cells_to_remove:
-                self.solution_order.remove(cell)
-
-            # Clean flood to list of cells in solution order list
-            for cell in self.solution_order:
-                result_list = [
-                    new_cell
-                    for new_cell in cell.flood_to
-                    if new_cell in self.solution_order
-                ]
-                cell.flood_to = result_list
-
-            # Remove keys that are not used, and DOOR, UP, DOWN node in leaf
-            changed = True
-            while changed:
-                changed = False
-                cells_to_remove = []
-                for cell in self.solution_order:
-                    if cell.type == Cell_Type.KEY:
-                        door_available = False
-                        door = "D" + cell.cell_value[1]
-                        for subcell in self.solution_order:
-                            if (
-                                subcell.type == Cell_Type.DOOR
-                                and subcell.cell_value == door
-                            ):
-                                door_available = True
-                        if not door_available:
-                            cells_to_remove.append(cell)
-
-                if len(cells_to_remove) > 0:
-                    changed = True
-
-                # Remove the unnecessary cells after the loop
-                for cell in cells_to_remove:
-                    self.solution_order.remove(cell)
-
-                cells_to_remove = []
-
-                for cell in self.solution_order:
-                    result_list = [
-                        new_cell
-                        for new_cell in cell.flood_to
-                        if new_cell in self.solution_order
-                    ]
-                    if len(result_list) != len(cell.flood_to):
-                        changed = True
-                    if len(result_list) == 0 and (
-                        cell.type == Cell_Type.UP
-                        or cell.type == Cell_Type.DOWN
-                        or cell.type == Cell_Type.DOOR
-                    ):
-                        cells_to_remove.append(cell)
-                    cell.flood_to = result_list
-
-                if len(cells_to_remove) > 0:
-                    changed = True
-
-                # Remove the unnecessary cells after the loop
-                for cell in cells_to_remove:
-                    self.solution_order.remove(cell)
-
-            # Add UP and DOWN node to travel up down
-            changed = True
-            while changed is True:
-                changed = False
-                previous_cell_index = 0
-                for i in range(1, len(self.solution_order)):
-                    previous_cell = self.solution_order[previous_cell_index]
-                    current_cell = self.solution_order[i]
-                    if previous_cell.floor != current_cell.floor:
-                        if (
-                            previous_cell.type == Cell_Type.UP
-                            and current_cell.type == Cell_Type.DOWN
-                            and current_cell.floor - previous_cell.floor == 1
-                        ):
-                            pass
-                        elif (
-                            previous_cell.type == Cell_Type.DOWN
-                            and current_cell.type == Cell_Type.UP
-                            and previous_cell.floor - current_cell.floor == 1
-                        ):
-                            pass
-                        else:
-                            changed = True
-                            if previous_cell.floor > current_cell.floor:
-                                floor = current_cell.floor
-                                while floor < previous_cell.floor:
-                                    self.solution_order.insert(
-                                        i, self.stair_set["UP " + str(floor)]
-                                    )
-                                    self.solution_order.insert(
-                                        i, self.stair_set["DO " + str(floor + 1)]
-                                    )
-                                    floor += 1
-                            else:
-                                floor = current_cell.floor
-                                while floor > previous_cell.floor:
-                                    self.solution_order.insert(
-                                        i, self.stair_set["DO " + str(floor)]
-                                    )
-                                    self.solution_order.insert(
-                                        i, self.stair_set["UP " + str(floor - 1)]
-                                    )
-                                    floor -= 1
-                            break
-                    previous_cell_index = i
-
-        # Search for path for each two adjacent cells in solution order
-        if self.current_index < len(self.solution_order) - 1:
-            if self.search == None or self.search.is_completed:
-                self.clear_visited_cells()
-                if (
-                    self.solution_order[self.current_index].floor
-                    != self.solution_order[self.current_index + 1].floor
-                ):
-                    self.current_index += 1
-                else:
-                    self.current_floor = self.solution_order[self.current_index].floor
-                    self.search = A_star(
-                        self.solution_order[self.current_index],
-                        self.solution_order[self.current_index + 1],
-                        self.grid_cells[self.current_floor],
-                        self.key_set,
-                        self.stair_set,
-                    )
-            else:
-                self.search.run()
-                if self.search.is_completed:
-                    if (
-                        self.solution_order[self.current_index + 1].type
-                        == Cell_Type.KEY
-                    ):
-                        self.key_set.add(
-                            "K"
-                            + self.solution_order[self.current_index + 1].cell_value[1]
-                        )
-                    self.solution.extend(self.search.solution)
-                    self.current_index += 1
-        else:
+        count = 0
+        while len(self.open) > 0:
+            if(count == 10000):
+                self.fail_to_solve = True
+                self.is_completed == True
+            node = heapq.heappop(self.open)
+            conflict_list = node.validate([])
+            if len(conflict_list) == 0:
+                self.generate_random_path(node.solution, set(), 0)
+                if self.is_completed:
+                    return
+            for conflict in conflict_list:
+                new_node = Level4(self.start_cell, self.goal_cell, self.grid_cells,  self.sub_goal_cell, self.sub_start_cell,search = node.search, constraints = {}, solution = node.solution)
+                constraint = Constraint(conflict.conflict_cell, conflict.time_step)
+                new_node.constraints[conflict.agent.cell_value] = [constraint]
+                for key in node.constraints:
+                    if new_node.constraints.get(key) is not None:
+                        new_node.constraints[key].extend(node.constraints[key])
+                    else:
+                        new_node.constraints[key] = [item for item in node.constraints[key]]
+                is_success = new_node.update_solution()
+                if is_success == False:
+                    continue
+                if new_node.cost < 9000:
+                    heapq.heappush(self.open, new_node)
+    
+    def generate_random_path(self, solution, key_set, depth):
+        self.attempt +=1
+        if self.attempt >= 2345678:
             self.is_completed = True
+            self.fail_to_solve = True
+        if depth == 950:
+            return
+        if self.is_completed:
+            return
+        copy_solution = [[sub_item for sub_item in item] for item in solution]
+        full = True
+        min = copy_solution[0]
+        for i in range(1, len(copy_solution)):
+            if len(copy_solution[i]) < len(copy_solution[0]):
+                if len(copy_solution[i]) < len(min):
+                    full = False
+                    min = copy_solution[i]
+        
+        if min != copy_solution[0]:
+            last_cell = min[-1]
+            neighbors = last_cell.check_neighbors(self.grid_cells[1])
+            random.shuffle(neighbors)
+            
+            for cell in neighbors:
+                if cell.type == Cell_Type.UP:
+                    continue
+                if cell.type == Cell_Type.DOOR:
+                    key = 'K' + cell.cell_value[1]
+                    if key not in key_set:
+                        continue
+                min.append(cell)
+                conflict_list = self.validate(copy_solution)
+                if len(conflict_list) == 0:
+                    if cell.type == Cell_Type.KEY:
+                        copy_key = key_set.copy()
+                        copy_key.add(cell.cell_value)
+                        self.generate_random_path(copy_solution, copy_key, depth+1)
+                    else:
+                        self.generate_random_path(copy_solution, key_set, depth+1)
+                min.pop()
+            min.append(last_cell)
+            conflict_list = self.validate(copy_solution)
+            if len(conflict_list) == 0:  
+                self.generate_random_path(copy_solution, key_set, depth + 1)
+            min.pop()
+
+        if full:
+            conflict_list = self.validate(copy_solution)
+            if len(conflict_list) == 0:
+                print(depth)
+                self.solution = copy_solution
+                self.is_completed = True
+
+
+    
+    def update_solution(self):
+        for i in range(len(self.sub_goal_cell)):
+            if self.constraints.get(self.sub_start_cell[i].cell_value) == None:
+                self.search[i] =Level3(self.start_cell, self.goal_cell, self.grid_cells,  self.search[i].solution_order, self.search[i].sub_solutions, [])
+            else:
+                if i == 0:
+                    self.search[i] = Level3(self.sub_start_cell[i], self.sub_goal_cell[i], self.grid_cells,  self.search[i].solution_order, self.search[i].sub_solutions, self.constraints[self.sub_start_cell[i].cell_value])
+                    is_success = self.search[i].update_solution()
+                else:
+                    self.search[i] = Level3(self.sub_start_cell[i], self.sub_goal_cell[i], self.grid_cells, self.search[i].solution_order, self.search[i].sub_solutions, self.constraints[self.sub_start_cell[i].cell_value])
+                    is_success = self.search[i].update_solution()
+                if is_success == False:
+                    return False
+                self.solution[i] = self.search[i].solution
+        self.set_cost()
+        return True
+    
+    
+    def __lt__(self, other):
+        return self.cost < other.cost
+    
+    def validate(self, solution):
+        if len(solution) == 0:
+            solution = self.solution
+        conflict_list = []
+        for i, array1 in enumerate(solution):
+            for j, array2 in enumerate(solution):
+                agent_1 = self.sub_start_cell[i]
+                if i > j:
+                    for index in range(min(len(array1)-1, len(array2)-1)):
+                        cell_1 = array1[index]
+                        cell_2 = array2[index+1]
+                        cell_3 = array1[index+1]
+                        if cell_3 == cell_2:
+                            conflict_list.append(Conflict(agent_1, cell_3, index + 2))
+                            break
+                        if cell_1.x == cell_2.x and abs(cell_1.y - cell_2.y) ==1:
+                            if cell_3.y == cell_2.y:
+                                conflict_list.append(Conflict(agent_1, cell_3, index + 2))
+                                break
+                        if cell_1.y == cell_2.y and abs(cell_1.x - cell_2.x) == 1:
+                            if cell_3.x == cell_2.x:
+                                conflict_list.append(Conflict(agent_1, cell_3, index + 2))
+                                break
+                elif i < j:
+                    for index in range(min(len(array1)-1, len(array2)-1)):
+                        cell_1 = array1[index]
+                        cell_2 = array2[index]
+                        cell_3 = array1[index+1]
+                        if cell_3 == cell_2:
+                            conflict_list.append(Conflict(agent_1, cell_3, index + 2))
+                            break
+                        if cell_1.x == cell_2.x and abs(cell_1.y - cell_2.y) ==1:
+                            if cell_3.y == cell_2.y:
+                                conflict_list.append(Conflict(agent_1, cell_3, index + 2))
+                                break
+                        if cell_1.y == cell_2.y and abs(cell_1.x - cell_2.x) == 1:
+                            if cell_3.x == cell_2.x:
+                                conflict_list.append(Conflict(agent_1, cell_3, index + 2))
+                                break
+                else:
+                    pass
+        return conflict_list
+                            
+    def set_cost(self):
+        self.cost = 0
+        for i in range(len(self.solution)):
+            self.cost += len(self.solution[i])
+
+
+class Conflict:
+    def __init__(self, agent, conflict_cell, time_step):
+        self.agent = agent
+        self.conflict_cell = conflict_cell
+        self.time_step = time_step
+    
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return self.agent == other.agent and self.conflict_cell == other.conflict_cell and self.time_step == other.time_step
+
+class Constraint:
+    def __init__(self,cell, time_step):
+        self.cell = cell
+        self.time_step = time_step
+    
+    def __eq__(self, other):
+        return self.cell == other.cell and self.time_step == other.time_step
+
+    def __hash__(self):
+        # Use the hash value of a tuple containing the relevant attributes
+        return hash((self.cell.x, self.cell.y, self.cell.floor, self.time_step))
+
+
+

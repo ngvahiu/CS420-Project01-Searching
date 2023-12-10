@@ -19,6 +19,8 @@ class BlindSearchLevel2:
         self.key_set = set()
         self.frontier = []
         self.is_completed = False
+        self.current_floor = 1
+        self.fail_to_solve = False
 
     def clean_level_2(self):
         for cell in self.grid_cells:
@@ -28,7 +30,7 @@ class BlindSearchLevel2:
 
     def show_path(self):
         for cell in self.path:
-            print(cell.x, cell.y, cell.type, cell.cell_value)
+            (cell.x, cell.y, cell.type, cell.cell_value)
 
     def update_solution(self):
         self.key_set.clear()
@@ -85,4 +87,5 @@ class BlindSearchLevel2:
         if self.frontier:
             self.current_cell = self.frontier.pop(0)
         else:
-            print("Can not solve")
+            self.is_completed = True
+            self.fail_to_solve = True

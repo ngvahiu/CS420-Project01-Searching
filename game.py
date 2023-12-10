@@ -22,7 +22,6 @@ from dfs import DFS
 from dropdown import DropDown
 from level_3 import Level3
 from level_4 import Level4
-from tree_based_level_2 import TreeBasedLevel2
 from visualization import Matrix
 
 
@@ -32,12 +31,13 @@ class Game_State(Enum):
 
 
 class Game:
-    def __init__(self, screen, naruto):
+    def __init__(self, screen, characters):
         self.current_level = None
         self.levels = {
             1: ["DFS", "BFS", "A_Star"],
             2: ["Blind Search", "Tree based"],
             3: ["Tree based"],
+            4: ["CBS + A_Star"]
         }
         self.current_algorithm = None
         self.current_map = None
@@ -51,7 +51,7 @@ class Game:
             35,
             pygame.font.SysFont(None, 30),
             "Select level",
-            ["1", "2", "3"],
+            ["1", "2", "3", "4"],
         )
         self.algorithm_list = DropDown(
             [COLOR_INACTIVE, COLOR_ACTIVE],
@@ -81,7 +81,7 @@ class Game:
         self.matrix = None
         self.search = None
         self.start = None
-        self.naruto = naruto
+        self.characters = characters
         self.end = None
         # Load audio file
         mixer.music.load("audio/theme_song.mp3")
@@ -102,20 +102,38 @@ class Game:
     def display_game(self, event_list):
         self.draw_background()
         self.show_instructions(event_list)
-        self.show_time()
         if not self.search.is_completed:
             if pygame.mixer.music.get_busy():
                 pygame.mixer.music.pause()
             self.matrix.draw(self.search.current_floor)
+            pygame.display.flip()
             self.search.run()
             self.end = time.time()
+            print(str(round(self.end - self.start, 1)))
+        #         def show_time(self):
+        # text = self.font.render(
+        #     "Running time: " + str(round(self.end - self.start, 1)) + "s",
+        #     True,
+        #     (255, 255, 255),
+        # )
+        # textRect = text.get_rect()
+        # textRect.center = (WINDOW_WIDTH - 3 * TILE + 2, TILE * 5 + 60)
+        # self.screen.blit(text, textRect)
         else:
-            if not pygame.mixer.music.get_busy():
-                # pygame.mixer.music.play()
-                pass
-            pygame.time.wait(100)
-            self.matrix.draw_solution(self.search.solution, self.naruto)
-            self.show_score()
+            if self.search.fail_to_solve:
+                self.matrix.draw(self.search.current_floor)
+                font = pygame.font.Font(None, 100)
+                text = font.render("FAIL TO SOLVE", True, (228, 97, 27))
+                text_rect = text.get_rect(center=((WINDOW_WIDTH - 230)// 2, (WINDOW_WIDTH - 120) // 2 - 100))
+                self.screen.blit(text, text_rect)
+            else:
+                if not pygame.mixer.music.get_busy():
+                    pass
+                pygame.time.wait(100)
+                self.matrix.draw_solution(
+                    self.search.solution, self.characters
+                )
+                self.show_score()
         return
 
     def display_menu(self, event_list):
@@ -242,16 +260,6 @@ class Game:
         self.screen.blit(text, textRect)
         self.handle_select_level_and_algorithm(event_list, WINDOW_WIDTH // 2 - 114)
 
-    def show_time(self):
-        text = self.font.render(
-            "Running time: " + str(round(self.end - self.start, 1)) + "s",
-            True,
-            (255, 255, 255),
-        )
-        textRect = text.get_rect()
-        textRect.center = (WINDOW_WIDTH - 3 * TILE + 2, TILE * 5 + 60)
-        self.screen.blit(text, textRect)
-
     def show_score(self):
         text = self.font.render(
             "Naruto's score: " + str(100 - self.search.cell_traverse_count) + " pts",
@@ -263,11 +271,7 @@ class Game:
         self.screen.blit(text, textRect)
 
     def set_up(self):
-        self.current_map = "1"
-        self.current_level = "4"
-        self.current_algorithm = "Tree based"
-        if self.current_map is None or self.current_level is None:
-            print(self.current_map, self.current_level)
+        if self.current_map is None or self.current_level is None or self.current_algorithm is None:
             return
 
         self.matrix = Matrix(
@@ -280,47 +284,48 @@ class Game:
         )
         if self.current_algorithm == "DFS":
             self.search = DFS(
-                self.matrix.start_cell, self.matrix.grid_cells[self.current_floor]
+                self.matrix.start_cell, self.matrix.goal_cell, self.matrix.grid_cells[1]
             )
         elif self.current_algorithm == "BFS":
             self.search = BFS(
-                self.matrix.start_cell, self.matrix.grid_cells[self.current_floor]
+                self.matrix.start_cell, self.matrix.goal_cell, self.matrix.grid_cells[1]
             )
         elif self.current_algorithm == "A_Star":
             self.search = A_star(
                 self.matrix.start_cell,
                 self.matrix.goal_cell,
-                self.matrix.grid_cells[self.current_floor],
+                self.matrix.grid_cells[1],
             )
         elif self.current_algorithm == "Blind Search":
             self.search = BlindSearchLevel2(
                 self.matrix.start_cell,
                 self.matrix.goal_cell,
-                self.matrix.grid_cells[self.current_floor],
+                self.matrix.grid_cells[1],
             )
         elif self.current_algorithm == "Tree based":
             if self.current_level == "2":
-                self.search = TreeBasedLevel2(
-                    self.matrix.start_cell,
-                    self.matrix.goal_cell,
-                    self.matrix.grid_cells[self.current_floor],
-                )
-            elif self.current_level == "3":
+                self.matrix.get_doors_keys()
                 self.search = Level3(
                     self.matrix.start_cell,
                     self.matrix.goal_cell,
                     self.matrix.grid_cells,
-                    self.go_up,
-                    self.go_down,
                 )
-            elif self.current_level == "4":
-                self.search = Level4(
+            elif self.current_level == "3":
+                self.matrix.get_doors_keys()
+                self.search = Level3(
                     self.matrix.start_cell,
                     self.matrix.goal_cell,
                     self.matrix.grid_cells,
-                    self.go_up,
-                    self.go_down,
                 )
+        elif self.current_algorithm == "CBS + A_Star":
+            self.matrix.get_doors_keys()
+            self.search = Level4(
+                self.matrix.start_cell,
+                self.matrix.goal_cell,
+                self.matrix.grid_cells,
+                self.matrix.sub_goal_cell,
+                self.matrix.sub_start_cell,
+            )
         else:
             return
         self.level_list.rect.x = WINDOW_WIDTH - 214

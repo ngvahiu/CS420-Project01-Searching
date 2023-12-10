@@ -1,8 +1,20 @@
 from enum import Enum
-
+import queue
 import pygame
 
 from constants import TILE
+
+class Cell_Type(Enum):
+    OBSTACLE = "OBSTACLE"
+    START = "START"
+    GOAL = "GOAL"
+    BLANK = "BLANK"
+    UP = "UP"
+    DOWN = "DOWN"
+    KEY = "KEY"
+    DOOR = "DOOR"
+    SUB_AGENT = "SUB_AGENT"
+    SUB_GOAL = "SUB_GOAL"
 
 
 class Matrix:
@@ -17,8 +29,21 @@ class Matrix:
         self.key_cells = {}
         self.door_cells = {}
         self.current_solution_step = 0
-        # initialize the matrix
+        self.agent_turn = 1
+        self.custom_order = {
+            Cell_Type.GOAL: 0,
+            Cell_Type.SUB_GOAL: 1,
+            Cell_Type.KEY: 2,
+            Cell_Type.DOOR: 3,
+            Cell_Type.UP: 4,
+            Cell_Type.DOWN: 5,
+            Cell_Type.BLANK: 6,
+            Cell_Type.START: 7,
+            Cell_Type.SUB_AGENT: 8,
+            Cell_Type.OBSTACLE: 9,
+        }
         self.init_matrix()
+
 
     def init_matrix(self):
         # file = open(self.file_name, "r")
@@ -85,34 +110,60 @@ class Matrix:
                             self.grid_cells[int(current_floor)].append(cell)
                             self.door_cells[int(current_floor)].append(cell)
                         elif cell_value[0] == "A":
-                            cell_type = Cell_Type.START
-                            cell = Cell(
-                                j,
-                                i,
-                                self.sc,
-                                int(current_floor),
-                                rows,
-                                cols,
-                                cell_type,
-                                cell_value=cell_value,
-                            )
                             if(cell_value[1] == '1'):
+                                cell_type = Cell_Type.START
+                                cell = Cell(
+                                    j,
+                                    i,
+                                    self.sc,
+                                    int(current_floor),
+                                    rows,
+                                    cols,
+                                    cell_type,
+                                    cell_value=cell_value,
+                                )
                                 self.start_cell = cell
+                            else:
+                                cell_type = Cell_Type.SUB_AGENT
+                                cell = Cell(
+                                    j,
+                                    i,
+                                    self.sc,
+                                    int(current_floor),
+                                    rows,
+                                    cols,
+                                    cell_type,
+                                    cell_value=cell_value,
+                                )
+                            self.sub_start_cell.append(cell)
                             self.grid_cells[int(current_floor)].append(cell)
                         elif cell_value[0] == 'T':
-                            cell_type = Cell_Type.GOAL
-                            cell = Cell(
-                                j,
-                                i,
-                                self.sc,
-                                int(current_floor),
-                                rows,
-                                cols,
-                                cell_type,
-                                cell_value=cell_value,
-                            )
                             if(cell_value[1] == '1'):
+                                cell_type = Cell_Type.GOAL
+                                cell = Cell(
+                                    j,
+                                    i,
+                                    self.sc,
+                                    int(current_floor),
+                                    rows,
+                                    cols,
+                                    cell_type,
+                                    cell_value=cell_value,
+                                )
                                 self.goal_cell = cell
+                            else:
+                                cell_type = Cell_Type.SUB_GOAL
+                                cell = Cell(
+                                    j,
+                                    i,
+                                    self.sc,
+                                    int(current_floor),
+                                    rows,
+                                    cols,
+                                    cell_type,
+                                    cell_value=cell_value,
+                                )
+                            self.sub_goal_cell.append(cell)
                             self.grid_cells[int(current_floor)].append(cell)
                         elif cell_value.isdigit():
                             cell_type = Cell_Type.BLANK
@@ -136,7 +187,8 @@ class Matrix:
                             self.grid_cells[int(current_floor)].append(cell)
                     i += 1
 
-        print(123)
+        self.sub_start_cell.sort(key = lambda x: x.cell_value[1])
+        self.sub_goal_cell.sort(key = lambda x: x.cell_value[1])
 
     def draw(self, current_floor):
         [cell.draw() for cell in self.grid_cells[current_floor]]
@@ -144,40 +196,142 @@ class Matrix:
     def get_center_cell(self, x, y):
         return (float(x * TILE + TILE / 2), float(y * TILE + TILE / 2))
 
-    def draw_solution(self, solution: list, naruto):
-        current_floor = solution[self.current_solution_step
+    def draw_solution(self, solution: list, characters):
+        if isinstance(solution[0], list):
+            current_floor = solution[0][self.current_solution_step if self.current_solution_step < len(solution[0]) else len(solution[0])-1].floor
+            [cell.draw_heat() for cell in self.grid_cells[current_floor]]
+            for idx, sub_solution in enumerate(solution):
+                if current_floor > 1 and idx > 0:
+                    continue
+                if idx < self.agent_turn:
+                    (x1, y1) = self.get_center_cell(sub_solution[0].x, sub_solution[0].y)
+                    for index in range(
+                        1,
+                        self.current_solution_step
+                        if self.current_solution_step < len(sub_solution)
+                        else len(sub_solution),
+                    ):
+                        
+                        (x2, y2) = self.get_center_cell(sub_solution[index].x, sub_solution[index].y)
+
+                        if sub_solution[index].floor == current_floor:
+                            pygame.draw.line(self.sc, pygame.Color("#66ccff"), (x1, y1), (x2, y2), 2)
+                        (x1, y1) = (x2, y2)
+
+                    self.sc.blit(characters[idx], (x1 - TILE / 2, y1 - TILE / 2))
+                else:
+                    alternative_step = self.current_solution_step - 1
+                    (x1, y1) = self.get_center_cell(sub_solution[0].x, sub_solution[0].y)
+                    for index in range(
+                        1,
+                        alternative_step
+                        if alternative_step < len(sub_solution)
+                        else len(sub_solution),
+                    ):
+                        (x2, y2) = self.get_center_cell(sub_solution[index].x, sub_solution[index].y)
+                        pygame.draw.line(self.sc, pygame.Color("#66ccff"), (x1, y1), (x2, y2), 2)
+                        (x1, y1) = (x2, y2)
+
+                    self.sc.blit(characters[idx], (x1 - TILE / 2, y1 - TILE / 2))
+
+            if self.current_solution_step < 1000:
+                if self.agent_turn >= len(solution):
+                    self.current_solution_step += 1
+                    self.agent_turn = 1
+                else:
+                    self.agent_turn +=1
+        else:
+            current_floor = solution[self.current_solution_step
             if self.current_solution_step < len(solution)
             else len(solution) - 1].floor
-        [cell.draw_heat() for cell in self.grid_cells[current_floor]]
-        (x1, y1) = self.get_center_cell(solution[0].x, solution[0].y)
-        for index in range(
-            1,
-            self.current_solution_step
-            if self.current_solution_step < len(solution)
-            else len(solution),
-        ):
-            (x2, y2) = self.get_center_cell(solution[index].x, solution[index].y)
+            [cell.draw_heat() for cell in self.grid_cells[current_floor]]
+            (x1, y1) = self.get_center_cell(solution[0].x, solution[0].y)
+            for index in range(
+                1,
+                self.current_solution_step
+                if self.current_solution_step < len(solution)
+                else len(solution),
+            ):
+                (x2, y2) = self.get_center_cell(solution[index].x, solution[index].y)
 
-            # draw path between 2 centers
-            if solution[index-1].floor == current_floor:
-                pygame.draw.line(self.sc, pygame.Color("#66ccff"), (x1, y1), (x2, y2), 2)
+                # draw path between 2 centers
+                if solution[index-1].floor == current_floor:
+                    pygame.draw.line(self.sc, pygame.Color("#66ccff"), (x1, y1), (x2, y2), 2)
 
-            (x1, y1) = (x2, y2)
+                (x1, y1) = (x2, y2)
 
-        self.sc.blit(naruto, (x1 - TILE / 2, y1 - TILE / 2))
-        if self.current_solution_step < len(solution):
-            self.current_solution_step += 1
+            self.sc.blit(characters[0], (x1 - TILE / 2, y1 - TILE / 2))
+            if self.current_solution_step < len(solution):
+                self.current_solution_step += 1
+        pygame.image.save(self.sc, 'solution_image.png')
 
+    def flood_fill(self, flood_cell):
+        flood_cell.visited = True
+        current_cell = flood_cell
+        _queue = queue.Queue()
 
-class Cell_Type(Enum):
-    OBSTACLE = "OBSTACLE"
-    START = "START"
-    GOAL = "GOAL"
-    BLANK = "BLANK"
-    UP = "UP"
-    DOWN = "DOWN"
-    KEY = "KEY"
-    DOOR = "DOOR"
+        if current_cell.type == Cell_Type.UP:
+            find_index = lambda x, y: x + y * current_cell.cols
+            next_down_cell = self.grid_cells[current_cell.floor + 1][
+                find_index(current_cell.x, current_cell.y)
+            ]
+            current_cell.flood_to.append(next_down_cell)
+            next_down_cell.flood_to.append(current_cell)
+
+        while current_cell:
+            neighbors = current_cell.check_neighbors(
+                self.grid_cells[current_cell.floor]
+            )
+            for cell in neighbors:
+                if cell in flood_cell.flood_to:
+                    continue
+                if cell.type == Cell_Type.UP or cell.type == Cell_Type.DOWN:
+                    if flood_cell.type == cell.type:
+                        cell.visited = True
+                        _queue.put(cell)
+                        continue
+                if cell.type == Cell_Type.KEY or cell.type == Cell_Type.GOAL or cell.type == Cell_Type.UP or cell.type == Cell_Type.DOWN or cell.type == Cell_Type.SUB_AGENT or cell.type == Cell_Type.SUB_GOAL:
+                    flood_cell.flood_to.append(cell)
+                elif cell.type == Cell_Type.DOOR:
+                    cell.visited = True
+                    flood_cell.flood_to.append(cell)
+                    continue
+                cell.visited = True
+                _queue.put(cell)
+
+            if not _queue.empty():
+                current_cell = _queue.get()
+            else:
+                current_cell = None
+
+    def get_doors_keys(self):
+        arr = []
+        for key in self.grid_cells:
+            for cell in self.grid_cells[key]:
+                if cell.type != Cell_Type.OBSTACLE and cell.type != Cell_Type.GOAL and cell.type != Cell_Type.BLANK:
+                    arr.append(cell)
+        for cell in arr:
+            self.flood_fill(cell)
+            for cell in self.grid_cells[cell.floor]:
+                cell.visited = False
+            sorted(cell.flood_to, key=lambda cell: self.custom_order.get(cell.type, float('inf')))
+        self.clear_visited_cells()
+
+    def clear_visited_cells(self):
+        for index in self.grid_cells:
+            for cell in self.grid_cells[index]:
+                cell.visited = False
+                cell.heuristic = 0
+                cell.cost = 0
+                cell.parent = None
+    
+     # Define the custom order for Cell_Type
+    
+
+    # Define a sorting key function
+    def sorting_key(self, cell):
+        return self.custom_order.get(cell.type, float('inf'))
+
 
 
 class Cell:
@@ -204,6 +358,7 @@ class Cell:
         self.visited = False
         self.heuristic = heuristic
         self.visited_count = 0
+        self.visited_by = set()
         self.heat_colors = {
             0: "#333333",
             1: "#f7f0a1",
@@ -220,6 +375,7 @@ class Cell:
         self.flood_to = []
         self.flooded_from = []
         self.children = []
+        self.time_step = 0
         self.font = pygame.font.Font(None, 36)
 
         if type == Cell_Type.DOOR:
@@ -229,7 +385,17 @@ class Cell:
     def __lt__(self, other):
         return (self.cost + self.heuristic) < (other.cost + other.heuristic)
 
+
+    def is_next_to(self, other):
+        if self.x == other.x and abs(self.y - other.y) == 1:
+            return True
+        if self.y == other.y and abs(self.x - other.x) ==1:
+            return True
+        return False
+
     def __eq__(self, other):
+        if other == None:
+            return False
         return self.x == other.x and self.y == other.y and self.floor == other.floor
 
     def draw(self):
@@ -333,20 +499,20 @@ class Cell:
         top_left = self.check_cell(self.x - 1, self.y - 1, grid_cells)
         bottom_left = self.check_cell(self.x - 1, self.y + 1, grid_cells)
 
-        if top and not top.type == Cell_Type.OBSTACLE and not top.visited:
+        if top and not top.type == Cell_Type.OBSTACLE and top.visited == False:
             neighbors.append(top)
-        if bottom and not bottom.type == Cell_Type.OBSTACLE and not bottom.visited:
+        if bottom and not bottom.type == Cell_Type.OBSTACLE and bottom.visited == False:
             neighbors.append(bottom)
-        if left and not left.type == Cell_Type.OBSTACLE and not left.visited:
+        if left and not left.type == Cell_Type.OBSTACLE and left.visited == False:
             neighbors.append(left)
-        if right and not right.type == Cell_Type.OBSTACLE and not right.visited:
+        if right and not right.type == Cell_Type.OBSTACLE and right.visited == False:
             neighbors.append(right)
 
         # Diagonal
         if (
             top_right
             and not top_right.type == Cell_Type.OBSTACLE
-            and not top_right.visited
+            and top_right.visited == False
             and not top.type == Cell_Type.OBSTACLE
             and not right.type == Cell_Type.OBSTACLE
         ):
@@ -354,7 +520,7 @@ class Cell:
         if (
             top_left
             and not top_left.type == Cell_Type.OBSTACLE
-            and not top_left.visited
+            and top_left.visited == False
             and not top.type == Cell_Type.OBSTACLE
             and not left.type == Cell_Type.OBSTACLE
         ):
@@ -362,7 +528,7 @@ class Cell:
         if (
             bottom_right
             and not bottom_right.type == Cell_Type.OBSTACLE
-            and not bottom_right.visited
+            and bottom_right.visited == False
             and not bottom.type == Cell_Type.OBSTACLE
             and not right.type == Cell_Type.OBSTACLE
         ):
@@ -370,7 +536,7 @@ class Cell:
         if (
             bottom_left
             and not bottom_left.type == Cell_Type.OBSTACLE
-            and not bottom_left.visited
+            and bottom_left.visited == False
             and not bottom.type == Cell_Type.OBSTACLE
             and not left.type == Cell_Type.OBSTACLE
         ):
