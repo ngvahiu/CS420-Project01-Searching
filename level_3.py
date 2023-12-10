@@ -33,19 +33,16 @@ class Level3:
 
     def recursive(self, start_cell, solution, key_set, door_set, is_up, is_down, depth):
         self.attempt += 1
-        if(self.attempt >= 77777):
-            if  len(self.solution_order) == 0:
-                self.is_completed = True
-                self.fail_to_solve=True
-                return
-            else:
-                return
+        if self.is_completed:
+            return
+        if(self.attempt == 2345678):
+            self.is_completed = True
+            return
         if(depth == 950):
-            if len(self.solution_order) == 0:
-                self.is_completed = True
-                self.fail_to_solve=True
             return
         for cell in start_cell.flood_to:
+            if len(self.solution_order) >0:
+                return
             if cell.type == Cell_Type.DOOR:
                 if 'K' + cell.cell_value[1] not in key_set:
                     continue
@@ -109,7 +106,6 @@ class Level3:
         if len(self.solution_order) == 0:
             self.recursive(self.start_cell, [self.start_cell], set(), set(), False, False, 0)
             if len(self.solution_order) == 0:
-                self.is_completed = True
                 self.fail_to_solve = True
 
         # low_level_search for path for each two adjacent cells in solution order
@@ -143,7 +139,7 @@ class Level3:
                     self.current_index += 1
         else:
             self.is_completed = True
-            self.cell_traverse_count = 100 -  len(self.solution)
+            self.cell_traverse_count = len(self.solution)
     
     def search(self):
         from level_4 import Constraint
@@ -152,7 +148,6 @@ class Level3:
         if len(self.solution_order) == 0:
             self.recursive(self.start_cell, [self.start_cell], set(), set(), False, False, 0)
             if len(self.solution_order) == 0:
-                self.is_completed = True
                 self.fail_to_solve = True
 
         while self.is_completed == False:
@@ -193,6 +188,7 @@ class Level3:
                     self.current_index += 1
             else:
                 self.is_completed = True
+                self.cell_traverse_count = len(self.solution)
         return True
     
     def update_solution(self):
@@ -224,4 +220,5 @@ class Level3:
                 index-=1
         for sub_solution in self.sub_solutions:
             self.solution.extend(sub_solution)
+        self.cell_traverse_count = len(self.solution)
         return True

@@ -61,7 +61,7 @@ class Level4:
         count = 0
         while len(self.open) > 0:
             count+=1
-            if(count >= 7777):
+            if(count >= 5555):
                 self.fail_to_solve = True
                 self.is_completed == True
                 return
@@ -92,7 +92,7 @@ class Level4:
         if self.is_completed:
             return
         self.attempt +=1
-        if self.attempt >= 500000:
+        if self.attempt >= 2345678:
             self.is_completed = True
             self.fail_to_solve = True
         copy_solution = [[sub_item for sub_item in item] for item in solution]
