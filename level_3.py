@@ -34,14 +34,18 @@ class Level3:
     def recursive(self, start_cell, solution, key_set, door_set, is_up, is_down, depth):
         self.attempt += 1
         if(self.attempt >= 2345678):
-            self.is_completed = True
-            self.fail_to_solve=True
-            return
+            if  len(self.solution_order) == 0:
+                self.is_completed = True
+                self.fail_to_solve=True
+                return
+            else:
+                return
         if(depth == 950):
+            if len(self.solution_order) == 0:
+                self.is_completed = True
+                self.fail_to_solve=True
             return
         for cell in start_cell.flood_to:
-            if len(self.solution_order) >0:
-                return
             if cell.type == Cell_Type.DOOR:
                 if 'K' + cell.cell_value[1] not in key_set:
                     continue
