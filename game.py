@@ -115,10 +115,11 @@ class Game:
             self.search.run()
             peak2, current_2 =tracemalloc.get_traced_memory()
             tracemalloc.stop()
+            if self.search.is_completed and self.search.fail_to_solve == False:
+                self.matrix.export_images(self.search.solution)
             self.total_memory+= (current_2 - current_1)
             self.end = time.time()
             self.total_time += round((self.end - self.start) * 1000, 3)
-            print(f'Total time: {self.total_time} milliseconds')
         else:
             if self.search.fail_to_solve:
                 self.matrix.draw(self.search.current_floor)
@@ -133,7 +134,6 @@ class Game:
                 self.matrix.draw_solution(
                     self.search.solution
                 )
-                self.matrix.export_images(self.search.solution)
                 self.show_score()
                 self.show_time()
         return
