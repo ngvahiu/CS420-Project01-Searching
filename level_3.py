@@ -33,7 +33,7 @@ class Level3:
 
     def recursive(self, start_cell, solution, key_set, door_set, is_up, is_down, depth):
         self.attempt += 1
-        if(self.attempt >= 2345678):
+        if(self.attempt >= 7777):
             if  len(self.solution_order) == 0:
                 self.is_completed = True
                 self.fail_to_solve=True
