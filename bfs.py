@@ -21,7 +21,7 @@ class BFS:
             return
 
         self.current_cell.visited = True
-        self.current_cell.visited_count += 1
+        self.current_cell.visited_count['A1'] += 1
         neighbors = self.current_cell.check_neighbors(self.grid_cells)
         self.cell_traverse_count += 1
         for neighbor in neighbors:
@@ -45,4 +45,3 @@ class BFS:
         while cell is not None:
             self.solution.insert(0, cell)
             cell = cell.parent
-        self.solution = [self.solution]

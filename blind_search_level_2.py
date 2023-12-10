@@ -38,7 +38,7 @@ class BlindSearchLevel2:
         for i in range(len(self.path) - 1):
             self.clean_level_2()
             search = A_star(
-                self.path[i], self.path[i + 1], self.grid_cells, self.key_set
+                self.path[i], self.path[i + 1], self.grid_cells, self.key_set, [], self.start_cell
             )
             while not search.is_completed:
                 search.run()
@@ -62,7 +62,7 @@ class BlindSearchLevel2:
             return True
 
         self.current_cell.visited = True
-        self.current_cell.visited_count += 1
+        self.current_cell.visited_count['A1'] += 1
         self.cell_traverse_count += 1
         neighbors = self.current_cell.check_neighbors(self.grid_cells)
 

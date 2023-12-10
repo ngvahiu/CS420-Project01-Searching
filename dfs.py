@@ -21,7 +21,7 @@ class DFS:
         if self.current_cell.visited is False:
             self.cell_traverse_count +=1
             self.current_cell.visited = True
-            self.current_cell.visited_count += 1
+            self.current_cell.visited_count['A1'] += 1
         neighbors = self.current_cell.check_neighbors(self.grid_cells)
 
         for cell in neighbors:
@@ -47,4 +47,3 @@ class DFS:
         while self.stack:
             cell = self.stack.pop()
             self.solution.insert(0, cell)
-        self.solution = [self.solution]

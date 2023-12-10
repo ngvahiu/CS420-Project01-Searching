@@ -1,6 +1,6 @@
 import time
 from enum import Enum
-
+import tracemalloc
 import pygame
 from pygame import mixer
 
@@ -86,6 +86,8 @@ class Game:
         # Load audio file
         mixer.music.load("audio/theme_song.mp3")
         mixer.music.set_volume(0.2)
+        self.total_time = 0
+        self.total_memory = 0
 
     def go_up(self):
         self.current_floor += 1
@@ -107,9 +109,16 @@ class Game:
                 pygame.mixer.music.pause()
             self.matrix.draw(self.search.current_floor)
             pygame.display.flip()
+            self.start = time.time()
+            tracemalloc.start()
+            peak1, current_1 =tracemalloc.get_traced_memory()
             self.search.run()
+            peak2, current_2 =tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            self.total_memory+= (current_2 - current_1)
             self.end = time.time()
-            print(str(round(self.end - self.start, 1)))
+            self.total_time += round((self.end - self.start) * 1000, 3)
+            print(f'Total time: {self.total_time} milliseconds')
         else:
             if self.search.fail_to_solve:
                 self.matrix.draw(self.search.current_floor)
@@ -119,13 +128,14 @@ class Game:
                 self.screen.blit(text, text_rect)
             else:
                 if not pygame.mixer.music.get_busy():
-                    pass
+                    pygame.mixer.music.play()
                 pygame.time.wait(100)
                 self.matrix.draw_solution(
-                    self.search.solution, self.characters
+                    self.search.solution
                 )
                 self.matrix.export_images(self.search.solution)
                 self.show_score()
+                self.show_time()
         return
 
     def display_menu(self, event_list):
@@ -139,6 +149,24 @@ class Game:
         text = font.render("MOVE YOUR STEP", True, (228, 97, 27))
         text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 - 100))
         self.screen.blit(text, text_rect)
+    
+    def show_time(self):
+        text = self.font.render(
+            "Memory used: " + str(round(self.total_memory, 3)),
+            True,
+            (255, 255, 255),
+        )
+        textRect = text.get_rect()
+        textRect.center = (WINDOW_WIDTH - 3 * TILE + 2, TILE * 5 + 40)
+        self.screen.blit(text, textRect)
+        text = self.font.render(
+            "Running time: " + str(round(self.total_time, 1)) + "ms",
+            True,
+            (255, 255, 255),
+        )
+        textRect = text.get_rect()
+        textRect.center = (WINDOW_WIDTH - 3 * TILE + 2, TILE * 5 + 60)
+        self.screen.blit(text, textRect)
 
     def draw_background(self):
         for y in range(WINDOW_HEIGHT):
@@ -224,13 +252,13 @@ class Game:
             textRect = text.get_rect()
             textRect.center = (
                 WINDOW_WIDTH - 2 * TILE,
-                TILE * (index + 1) + TILE / 2 + 80,
+                TILE * (index + 1) + TILE / 2 + 40,
             )
             self.screen.blit(text, textRect)
             pygame.draw.rect(
                 self.screen,
                 pygame.Color(color),
-                (WINDOW_WIDTH - 4 * TILE - 20, TILE * (index + 1) + 80, TILE, TILE),
+                (WINDOW_WIDTH - 4 * TILE - 20, TILE * (index + 1) + 40, TILE, TILE),
             )
             index += 1
         font = pygame.font.Font(None, 65)
@@ -243,7 +271,7 @@ class Game:
         textRect.center = (WINDOW_WIDTH - 3 * TILE, TILE + 10)
         self.screen.blit(text, textRect)
         text = self.font.render(
-            "Current floor: " + str(self.current_floor),
+            "Current floor: " + str(self.matrix.current_floor),
             True,
             (255, 255, 255),
         )
@@ -263,6 +291,7 @@ class Game:
         self.screen.blit(text, textRect)
 
     def set_up(self):
+        self.total_time = 0
         if self.current_map is None or self.current_level is None or self.current_algorithm is None:
             return
 
@@ -273,6 +302,7 @@ class Game:
             + self.current_level
             + ".txt",
             self.screen,
+            self.characters,
         )
         if self.current_algorithm == "DFS":
             self.search = DFS(
@@ -287,6 +317,8 @@ class Game:
                 self.matrix.start_cell,
                 self.matrix.goal_cell,
                 self.matrix.grid_cells[1],
+                set(),
+                [], self.matrix.start_cell
             )
         elif self.current_algorithm == "Blind Search":
             self.search = BlindSearchLevel2(
@@ -296,21 +328,18 @@ class Game:
             )
         elif self.current_algorithm == "Tree based":
             if self.current_level == "2":
-                self.matrix.get_doors_keys()
                 self.search = Level3(
                     self.matrix.start_cell,
                     self.matrix.goal_cell,
                     self.matrix.grid_cells,
                 )
             elif self.current_level == "3":
-                self.matrix.get_doors_keys()
                 self.search = Level3(
                     self.matrix.start_cell,
                     self.matrix.goal_cell,
                     self.matrix.grid_cells,
                 )
         elif self.current_algorithm == "CBS + A_Star":
-            self.matrix.get_doors_keys()
             self.search = Level4(
                 self.matrix.start_cell,
                 self.matrix.goal_cell,
@@ -323,7 +352,5 @@ class Game:
         self.level_list.rect.x = WINDOW_WIDTH - 214
         self.algorithm_list.rect.x = WINDOW_WIDTH - 214
         self.cases_list.rect.x = WINDOW_WIDTH - 214
-        self.start = time.time()
-        self.end = self.start
         self.state = Game_State.IN_GAME
         return

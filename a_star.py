@@ -9,7 +9,8 @@ class A_star:
         goal_cell: Cell = None,
         grid_cells=None,
         key_set=None,
-        constraints = []
+        constraints = [],
+        agent = None,
     ) -> None:
         self.grid_cells = grid_cells
         self.goal_cell = goal_cell
@@ -24,6 +25,7 @@ class A_star:
         self.constraints = constraints
         self.current_floor = 1
         self.fail_to_solve = False
+        self.agent = agent
         heapq.heapify(self.frontier)
 
     def manhattan_distance(self, current_cell):
@@ -44,7 +46,7 @@ class A_star:
         self.current_cell = heapq.heappop(self.frontier)
         self.cell_traverse_count += 1
         self.current_cell.visited = True
-        self.current_cell.visited_count += 1
+        self.current_cell.visited_count[self.agent.cell_value] += 1
 
         for neighbor_cell in self.current_cell.check_neighbors(self.grid_cells):
             if (
@@ -94,7 +96,7 @@ class A_star:
                 continue
             self.cell_traverse_count += 1
             self.current_cell.visited=True
-            self.current_cell.visited_count += 1
+            self.current_cell.visited_count[self.agent.cell_value] += 1
 
             for neighbor_cell in self.current_cell.check_neighbors(self.grid_cells):
                 if (

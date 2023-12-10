@@ -60,7 +60,8 @@ class Level4:
             return
         count = 0
         while len(self.open) > 0:
-            if(count == 10000):
+            count+=1
+            if(count == 3000):
                 self.fail_to_solve = True
                 self.is_completed == True
                 return
@@ -118,6 +119,7 @@ class Level4:
                 min.append(cell)
                 conflict_list = self.validate(copy_solution)
                 if len(conflict_list) == 0:
+                    cell.visited_count[min[0].cell_value]+=1
                     if cell.type == Cell_Type.KEY:
                         copy_key = key_set.copy()
                         copy_key.add(cell.cell_value)
@@ -134,8 +136,8 @@ class Level4:
         if full:
             conflict_list = self.validate(copy_solution)
             if len(conflict_list) == 0:
-                print(depth)
                 self.solution = copy_solution
+                self.cell_traverse_count = len(self.solution[0])
                 self.is_completed = True
 
 

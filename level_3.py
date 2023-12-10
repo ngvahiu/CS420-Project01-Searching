@@ -126,8 +126,7 @@ class Level3:
                         self.solution_order[self.current_index],
                         self.solution_order[self.current_index + 1],
                         self.grid_cells[self.current_floor],
-                        self.key_set,
-                        self.stair_set,
+                        self.key_set, [], self.start_cell
                     )
             else:
                 self.low_level_search.run()
@@ -144,6 +143,7 @@ class Level3:
                     self.current_index += 1
         else:
             self.is_completed = True
+            self.cell_traverse_count = 100 -  len(self.solution)
     
     def search(self):
         from level_4 import Constraint
@@ -170,7 +170,7 @@ class Level3:
                             self.solution_order[self.current_index + 1],
                             self.grid_cells[self.current_floor],
                             self.key_set,
-                            []
+                            [], self.start_cell
                         )
                 else:
                     is_success = self.low_level_search.search()
@@ -216,7 +216,7 @@ class Level3:
                     for cell in self.sub_solutions[i]:
                         if cell.type == Cell_Type.KEY:
                             key_set.add(cell.cell_value)
-                self.low_level_search = A_star(self.solution_order[index], self.solution_order[index+1], self.grid_cells[current_floor], key_set, constraints)
+                self.low_level_search = A_star(self.solution_order[index], self.solution_order[index+1], self.grid_cells[current_floor], key_set, constraints, self.start_cell)
                 is_success = self.low_level_search.search()
                 if is_success == False:
                     return False
